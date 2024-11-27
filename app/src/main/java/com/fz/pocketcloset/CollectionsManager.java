@@ -93,4 +93,51 @@ public class CollectionsManager {
             Log.e(TAG, "Error updating collection: " + e.getMessage(), e);
         }
     }
+
+    public List<ClothingItem> getClothesInCollection(int collectionId) {
+        List<ClothingItem> clothes = new ArrayList<>();
+        try {
+            SQLiteDatabase db = dbHelper.getReadableDatabase();
+            String query = "SELECT c.id, c.imagePath, c.tags FROM Clothes c " +
+                    "JOIN Clothes_Collections cc ON c.id = cc.clothes_id " +
+                    "WHERE cc.collection_id = ?";
+            Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(collectionId)});
+
+            while (cursor.moveToNext()) {
+                int id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
+                String imagePath = cursor.getString(cursor.getColumnIndexOrThrow("imagePath"));
+                String tags = cursor.getString(cursor.getColumnIndexOrThrow("tags"));
+                clothes.add(new ClothingItem(id, imagePath, tags));
+            }
+            cursor.close();
+            db.close();
+        } catch (Exception e) {
+            Log.e("CollectionsManager", "Error fetching clothes in collection: " + e.getMessage(), e);
+        }
+        return clothes;
+    }
+
+    public List<ClothingItem> getAvailableClothesForCollection(int collectionId) {
+        List<ClothingItem> clothes = new ArrayList<>();
+        try {
+            SQLiteDatabase db = dbHelper.getReadableDatabase();
+            String query = "SELECT * FROM Clothes WHERE id NOT IN (" +
+                    "SELECT clothes_id FROM Clothes_Collections WHERE collection_id = ?)";
+            Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(collectionId)});
+
+            while (cursor.moveToNext()) {
+                int id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
+                String imagePath = cursor.getString(cursor.getColumnIndexOrThrow("imagePath"));
+                String tags = cursor.getString(cursor.getColumnIndexOrThrow("tags"));
+                clothes.add(new ClothingItem(id, imagePath, tags));
+            }
+            cursor.close();
+            db.close();
+        } catch (Exception e) {
+            Log.e("CollectionsManager", "Error fetching available clothes: " + e.getMessage(), e);
+        }
+        return clothes;
+    }
+
+
 }

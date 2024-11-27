@@ -137,4 +137,21 @@ public class CollectionsFragment extends Fragment {
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
         builder.show();
     }
+
+    private void openCollection(Collection collection) {
+        Fragment collectionDetailFragment = new CollectionDetailFragment();
+
+        // Pass collection ID as an argument
+        Bundle bundle = new Bundle();
+        bundle.putInt("collection_id", collection.getId());
+        collectionDetailFragment.setArguments(bundle);
+
+        // Replace the current fragment with the CollectionDetailFragment
+        requireActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, collectionDetailFragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
 }

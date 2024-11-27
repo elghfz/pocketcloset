@@ -81,6 +81,16 @@ public class CollectionAdapter extends RecyclerView.Adapter<CollectionAdapter.Co
                 Log.e(TAG, "Error handling delete button click: " + e.getMessage(), e);
             }
         });
+        holder.itemView.setOnClickListener(v -> {
+            try {
+                if (context instanceof MainActivity) {
+                    ((MainActivity) context).openCollection(collection);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error opening collection: " + e.getMessage(), e);
+            }
+        });
+
     }
 
     @Override

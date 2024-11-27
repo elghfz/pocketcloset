@@ -39,31 +39,84 @@ public class MainActivity extends AppCompatActivity {
 
             // Handle navigation item clicks
             bottomNavigation.setOnItemSelectedListener(item -> {
+                Fragment selectedFragment = null;
+
                 if (item.getItemId() == R.id.nav_clothes) {
-                    showFragment(clothesFragment, collectionsFragment);
+                    selectedFragment = getSupportFragmentManager().findFragmentByTag("CLOTHES_FRAGMENT");
+                    if (selectedFragment == null) {
+                        selectedFragment = new ClothesFragment();
+                        getSupportFragmentManager().beginTransaction()
+                                .add(R.id.fragment_container, selectedFragment, "CLOTHES_FRAGMENT")
+                                .commit();
+                    }
                 } else if (item.getItemId() == R.id.nav_collections) {
-                    showFragment(collectionsFragment, clothesFragment);
+                    selectedFragment = getSupportFragmentManager().findFragmentByTag("COLLECTIONS_FRAGMENT");
+                    if (selectedFragment == null) {
+                        selectedFragment = new CollectionsFragment();
+                        getSupportFragmentManager().beginTransaction()
+                                .add(R.id.fragment_container, selectedFragment, "COLLECTIONS_FRAGMENT")
+                                .commit();
+                    }
                 }
+
+                showFragment(selectedFragment);
                 return true;
             });
+
+
+
 
         } catch (Exception e) {
             Log.e(TAG, "Error in onCreate: " + e.getMessage(), e);
         }
     }
 
-    /**
-     * Show one fragment and hide the other.
-     *
-     * @param fragmentToShow The fragment to show.
-     * @param fragmentToHide The fragment to hide.
-     */
-    private void showFragment(Fragment fragmentToShow, Fragment fragmentToHide) {
-        try {
-            FragmentTransaction transaction = fragmentManager.beginTransaction();
-            transaction.hide(fragmentToHide).show(fragmentToShow).commit();
-        } catch (Exception e) {
-            Log.e(TAG, "Error switching fragments: " + e.getMessage(), e);
+    private void showFragment(Fragment fragment) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        for (Fragment f : fragmentManager.getFragments()) {
+            if (f.equals(fragment)) {
+                fragmentManager.beginTransaction().show(f).commit();
+            } else {
+                fragmentManager.beginTransaction().hide(f).commit();
+            }
         }
     }
+    private boolean loadFragment(Fragment fragment, String tag) {
+        try {
+            Fragment existingFragment = getSupportFragmentManager().findFragmentByTag(tag);
+            if (existingFragment != null) {
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, existingFragment)
+                        .commit();
+            } else {
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, fragment, tag)
+                        .addToBackStack(null) // Ensure proper navigation
+                        .commit();
+            }
+            return true;
+        } catch (Exception e) {
+            Log.e("MainActivity", "Error loading fragment: " + e.getMessage(), e);
+            return false;
+        }
+    }
+
+
+    public void openCollection(Collection collection) {
+        Fragment collectionDetailFragment = new CollectionDetailFragment();
+
+        Bundle bundle = new Bundle();
+        bundle.putInt("collection_id", collection.getId());
+        collectionDetailFragment.setArguments(bundle);
+
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, collectionDetailFragment)
+                .addToBackStack(null) // Ensure proper navigation
+                .commit();
+    }
+
+
 }

@@ -29,12 +29,13 @@ public class ImagePickerHelper {
 
     private final ActivityResultLauncher<Intent> pickImageLauncher;
 
-    public ImagePickerHelper(Context context, DatabaseHelper dbHelper, Consumer<Void> onClothingAdded) {
-        this.context = context;
+    public ImagePickerHelper(Fragment fragment, DatabaseHelper dbHelper, Consumer<Void> onClothingAdded) {
+        this.context = fragment.requireContext();
         this.dbHelper = dbHelper;
         this.onClothingAdded = onClothingAdded;
 
-        pickImageLauncher = ((MainActivity) context).registerForActivityResult(
+        // Register the ActivityResultLauncher using the fragment's lifecycle
+        pickImageLauncher = fragment.registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == AppCompatActivity.RESULT_OK && result.getData() != null) {
@@ -44,6 +45,7 @@ public class ImagePickerHelper {
                 }
         );
     }
+
 
     public void openImagePicker() {
         Intent intent = new Intent(Intent.ACTION_PICK);
