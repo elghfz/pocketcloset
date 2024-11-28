@@ -1,12 +1,15 @@
 package com.fz.pocketcloset;
 
 import android.app.AlertDialog;
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -62,15 +65,31 @@ public class CollectionDetailFragment extends Fragment {
 
             adapter = new ClothingAdapter(
                     clothesInCollection,
-                    item -> {}, // Edit functionality (optional, not requested)
-                    item -> {},
-                    true, collectionId // Delete functionality (optional, not requested)
+                    item -> showEditClothingDialog(item),
+                    item -> deleteClothingItem(item),
+                    true, collectionId,
+                    itemId -> removeClothingFromCollection(itemId)
             );
 
             recyclerView.setAdapter(adapter);
         } catch (Exception e) {
             Log.e(TAG, "Error loading clothes in collection: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Error loading clothes in collection.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void removeClothingFromCollection(int clothingItemId) {
+        try {
+            // Remove the clothing item from the collection in the database
+            new CollectionsManager(requireContext()).removeClothingFromCollection(clothingItemId, collectionId);
+
+            // Provide immediate feedback to the user
+            Toast.makeText(requireContext(), "Clothing removed from collection!", Toast.LENGTH_SHORT).show();
+
+            // Refresh the clothing list
+            loadClothesInCollection();
+        } catch (Exception e) {
+            Log.e(TAG, "Error removing clothing from collection: " + e.getMessage(), e);
         }
     }
 
@@ -108,6 +127,73 @@ public class CollectionDetailFragment extends Fragment {
 
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
         builder.show();
+    }
+    private void showEditClothingDialog(ClothingItem item) {
+        try {
+            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+            builder.setTitle("Edit Clothing Item");
+
+            // Inflate the dialog layout
+            View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_clothes, null);
+            EditText inputTags = dialogView.findViewById(R.id.input_tags);
+
+            // Pre-fill the fields with the current item details
+            inputTags.setText(item.getTags());
+
+            builder.setView(dialogView);
+
+            builder.setPositiveButton("Save", (dialog, which) -> {
+                String newTags = inputTags.getText().toString();
+
+                if (!newTags.isEmpty()) {
+                    updateClothingItem(item.getId(), newTags);
+                    loadClothesInCollection();
+                    Toast.makeText(requireContext(), "Clothing item updated!", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(requireContext(), "Tags cannot be empty.", Toast.LENGTH_SHORT).show();
+                }
+
+            });
+
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+            builder.show();
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error showing edit dialog: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Error editing clothing item.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void updateClothingItem(int id, String tags) {
+        try {
+            SQLiteDatabase db = dbHelper.getWritableDatabase();
+            ContentValues values = new ContentValues();
+            values.put("tags", tags);
+            db.update("Clothes", values, "id = ?", new String[]{String.valueOf(id)});
+            db.close();
+        } catch (Exception e) {
+            Log.e(TAG, "Error updating clothing item: " + e.getMessage(), e);
+        }
+    }
+
+    private void deleteClothingItem(ClothingItem item) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Delete Clothing Item")
+                .setMessage("Are you sure you want to delete this item?")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    try {
+                        SQLiteDatabase db = dbHelper.getWritableDatabase();
+                        db.delete("Clothes", "id = ?", new String[]{String.valueOf(item.getId())});
+                        db.close();
+                        loadClothesInCollection();
+                        Toast.makeText(requireContext(), "Clothing item deleted!", Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error deleting clothing item: " + e.getMessage(), e);
+                        Toast.makeText(requireContext(), "Error deleting clothing item.", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
     }
 
 }

@@ -19,6 +19,7 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
     private final List<ClothingItem> clothingList;
     private final OnEditClickListener onEditClickListener;
     private final OnDeleteClickListener onDeleteClickListener;
+    private final OnRemoveFromCollectionListener onRemoveFromCollectionListener;
     private final boolean showRemoveFromCollectionButton;
     private final int currentCollectionId;
 
@@ -30,12 +31,17 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
         void onDeleteClick(ClothingItem item);
     }
 
-    public ClothingAdapter(List<ClothingItem> clothingList, OnEditClickListener onEditClickListener, OnDeleteClickListener onDeleteClickListener, boolean showRemoveFromCollectionButton, int currentCollectionId) {
+    public interface OnRemoveFromCollectionListener {
+        void onRemoveFromCollection(int clothingItemId);
+    }
+
+    public ClothingAdapter(List<ClothingItem> clothingList, OnEditClickListener onEditClickListener, OnDeleteClickListener onDeleteClickListener, boolean showRemoveFromCollectionButton, int currentCollectionId, OnRemoveFromCollectionListener onRemoveFromCollectionListener) {
         this.clothingList = clothingList;
         this.onEditClickListener = onEditClickListener;
         this.onDeleteClickListener = onDeleteClickListener;
         this.showRemoveFromCollectionButton = showRemoveFromCollectionButton;
         this.currentCollectionId = currentCollectionId;
+        this.onRemoveFromCollectionListener = onRemoveFromCollectionListener;
     }
 
     @NonNull
@@ -67,8 +73,7 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
             // Remove from collection button click listener (ONLY in the Collection Detail Fragment)
             holder.removeFromCollectionButton.setOnClickListener(v -> {
                 if (currentCollectionId != -1) {
-                    // Pass the context here and remove from the collection
-                    removeClothingFromCollection(item.getId(), currentCollectionId, holder.itemView.getContext());
+                    onRemoveFromCollectionListener.onRemoveFromCollection(item.getId());
                 }
             });
         } else {
@@ -77,14 +82,6 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
 
 
 
-    }
-
-    private void removeClothingFromCollection(int clothingItemId, int collectionId, Context context) {
-        // Create a CollectionsManager instance using the passed context
-        CollectionsManager collectionsManager = new CollectionsManager(context);
-
-        // Remove the clothing item from the collection
-        collectionsManager.removeClothingFromCollection(clothingItemId, collectionId);
     }
 
 

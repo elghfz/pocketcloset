@@ -108,7 +108,7 @@ public class ClothesFragment extends Fragment {
             adapter = new ClothingAdapter(
                     clothingList,
                     item -> showEditClothingDialog(item),
-                    item -> deleteClothingItem(item), false, currentCollectionId
+                    item -> deleteClothingItem(item), false, currentCollectionId,  itemId -> {}
             );
 
             recyclerView.setAdapter(adapter);
