@@ -139,5 +139,21 @@ public class CollectionsManager {
         return clothes;
     }
 
+    // Method to remove clothing from a specific collection (without deleting the item)
+    public void removeClothingFromCollection(int clothingItemId, int collectionId) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        try {
+            // Delete the entry from Clothes_Collections table based on the clothingItemId and collectionId
+            db.delete("Clothes_Collections",
+                    "clothes_id = ? AND collection_id = ?",
+                    new String[]{String.valueOf(clothingItemId), String.valueOf(collectionId)});
+            Log.d("CollectionsManager", "Clothing removed from collection successfully.");
+        } catch (Exception e) {
+            Log.e("CollectionsManager", "Error removing clothing from collection: " + e.getMessage(), e);
+        } finally {
+            db.close();
+        }
+    }
+
 
 }

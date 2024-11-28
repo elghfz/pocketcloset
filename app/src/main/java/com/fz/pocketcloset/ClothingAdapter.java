@@ -1,5 +1,6 @@
 package com.fz.pocketcloset;
 
+import android.content.Context;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +19,8 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
     private final List<ClothingItem> clothingList;
     private final OnEditClickListener onEditClickListener;
     private final OnDeleteClickListener onDeleteClickListener;
+    private final boolean showRemoveFromCollectionButton;
+    private final int currentCollectionId;
 
     public interface OnEditClickListener {
         void onEditClick(ClothingItem item);
@@ -27,10 +30,12 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
         void onDeleteClick(ClothingItem item);
     }
 
-    public ClothingAdapter(List<ClothingItem> clothingList, OnEditClickListener onEditClickListener, OnDeleteClickListener onDeleteClickListener) {
+    public ClothingAdapter(List<ClothingItem> clothingList, OnEditClickListener onEditClickListener, OnDeleteClickListener onDeleteClickListener, boolean showRemoveFromCollectionButton, int currentCollectionId) {
         this.clothingList = clothingList;
         this.onEditClickListener = onEditClickListener;
         this.onDeleteClickListener = onDeleteClickListener;
+        this.showRemoveFromCollectionButton = showRemoveFromCollectionButton;
+        this.currentCollectionId = currentCollectionId;
     }
 
     @NonNull
@@ -55,7 +60,33 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
 
         // Handle delete button click
         holder.deleteButton.setOnClickListener(v -> onDeleteClickListener.onDeleteClick(item));
+
+        // Conditionally show the "Remove from Collection" button
+        if (showRemoveFromCollectionButton) {
+            holder.removeFromCollectionButton.setVisibility(View.VISIBLE);
+            // Remove from collection button click listener (ONLY in the Collection Detail Fragment)
+            holder.removeFromCollectionButton.setOnClickListener(v -> {
+                if (currentCollectionId != -1) {
+                    // Pass the context here and remove from the collection
+                    removeClothingFromCollection(item.getId(), currentCollectionId, holder.itemView.getContext());
+                }
+            });
+        } else {
+            holder.removeFromCollectionButton.setVisibility(View.GONE);
+        }
+
+
+
     }
+
+    private void removeClothingFromCollection(int clothingItemId, int collectionId, Context context) {
+        // Create a CollectionsManager instance using the passed context
+        CollectionsManager collectionsManager = new CollectionsManager(context);
+
+        // Remove the clothing item from the collection
+        collectionsManager.removeClothingFromCollection(clothingItemId, collectionId);
+    }
+
 
     @Override
     public int getItemCount() {
@@ -65,7 +96,7 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
     static class ClothingViewHolder extends RecyclerView.ViewHolder {
         ImageView imageView;
         TextView tagsTextView;
-        Button editButton, deleteButton;
+        Button editButton, deleteButton, removeFromCollectionButton;
 
         public ClothingViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -73,6 +104,7 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
             tagsTextView = itemView.findViewById(R.id.textViewClothingTags);
             editButton = itemView.findViewById(R.id.buttonEditClothing);
             deleteButton = itemView.findViewById(R.id.buttonDeleteClothing);
+            removeFromCollectionButton = itemView.findViewById(R.id.buttonRemoveFromCollection);
         }
     }
 }

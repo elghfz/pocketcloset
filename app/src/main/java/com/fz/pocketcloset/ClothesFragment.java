@@ -30,6 +30,7 @@ public class ClothesFragment extends Fragment {
     private DatabaseHelper dbHelper;
     private ImagePickerHelper imagePickerHelper;
     private Parcelable recyclerViewState;
+    private int currentCollectionId = -1;
 
     @Override
     public void onPause() {
@@ -107,7 +108,7 @@ public class ClothesFragment extends Fragment {
             adapter = new ClothingAdapter(
                     clothingList,
                     item -> showEditClothingDialog(item),
-                    item -> deleteClothingItem(item)
+                    item -> deleteClothingItem(item), false, currentCollectionId
             );
 
             recyclerView.setAdapter(adapter);

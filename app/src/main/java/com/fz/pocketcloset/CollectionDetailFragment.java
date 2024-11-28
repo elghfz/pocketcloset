@@ -63,7 +63,8 @@ public class CollectionDetailFragment extends Fragment {
             adapter = new ClothingAdapter(
                     clothesInCollection,
                     item -> {}, // Edit functionality (optional, not requested)
-                    item -> {}  // Delete functionality (optional, not requested)
+                    item -> {},
+                    true, collectionId // Delete functionality (optional, not requested)
             );
 
             recyclerView.setAdapter(adapter);
@@ -108,4 +109,5 @@ public class CollectionDetailFragment extends Fragment {
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
         builder.show();
     }
+
 }
