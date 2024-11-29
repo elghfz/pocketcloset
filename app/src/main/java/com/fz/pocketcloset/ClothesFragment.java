@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -20,7 +21,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ClothesFragment extends Fragment {
 
@@ -28,8 +31,13 @@ public class ClothesFragment extends Fragment {
     private RecyclerView recyclerView;
     private ClothingAdapter adapter;
     private DatabaseHelper dbHelper;
+    private Button deleteButton;
+    private Button addToCollectionButton;
+    private Button addClothesButton;
     private ImagePickerHelper imagePickerHelper;
     private Parcelable recyclerViewState;
+    private boolean isSelectionMode = false;
+    private Set<ClothingItem> selectedItems = new HashSet<>();
 
     @Override
     public void onPause() {
@@ -71,8 +79,15 @@ public class ClothesFragment extends Fragment {
             recyclerView = view.findViewById(R.id.recyclerView);
             recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
+            deleteButton = view.findViewById(R.id.deleteButton);
+            deleteButton.setOnClickListener(v -> deleteSelectedItems());
+
+            addToCollectionButton = view.findViewById(R.id.addToCollectionButton);
+            addToCollectionButton.setOnClickListener(v -> showCollectionSelectionDialog());
+
             // Set up Add Clothing button
-            view.findViewById(R.id.button_add_clothes).setOnClickListener(v -> {
+            addClothesButton = view.findViewById(R.id.button_add_clothes);
+            addClothesButton.setOnClickListener(v -> {
                 if (imagePickerHelper != null) {
                     imagePickerHelper.openImagePicker();
                 } else {
@@ -86,6 +101,54 @@ public class ClothesFragment extends Fragment {
         }
 
         return view;
+    }
+
+    private void showCollectionSelectionDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Add to Collection");
+
+        // Fetch all collections
+        List<Collection> collections = new CollectionsManager(requireContext()).getAllCollections();
+
+        String[] collectionNames = new String[collections.size()];
+        boolean[] checkedItems = new boolean[collections.size()]; // Initially, no collection is selected
+
+        for (int i = 0; i < collections.size(); i++) {
+            collectionNames[i] = collections.get(i).getName();
+            checkedItems[i] = false;
+        }
+
+        builder.setSingleChoiceItems(collectionNames, -1, (dialog, which) -> {
+            // Handle single collection selection
+            for (int i = 0; i < checkedItems.length; i++) {
+                checkedItems[i] = (i == which); // Only one collection can be selected
+            }
+        });
+
+        builder.setPositiveButton("Add", (dialog, which) -> {
+            // Add selected clothes to the chosen collection
+            int selectedCollectionId = -1;
+            for (int i = 0; i < checkedItems.length; i++) {
+                if (checkedItems[i]) {
+                    selectedCollectionId = collections.get(i).getId();
+                    break; // We only need one selected collection
+                }
+            }
+
+            if (selectedCollectionId != -1) {
+                for (ClothingItem clothingItem : adapter.getSelectedItems()) {
+                    new CollectionsManager(requireContext())
+                            .assignClothingToCollection(clothingItem.getId(), selectedCollectionId);
+                }
+                Toast.makeText(requireContext(), "Clothes added to collection!", Toast.LENGTH_SHORT).show();
+                exitSelectionMode(); // Exit selection mode after adding
+            } else {
+                Toast.makeText(requireContext(), "Please select a collection.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.show();
     }
 
     @Override
@@ -104,10 +167,12 @@ public class ClothesFragment extends Fragment {
             Log.d(TAG, "Starting to load clothing items...");
             List<ClothingItem> clothingList = fetchClothingItems();
 
+            // Set adapter with selectionMode flag
             adapter = new ClothingAdapter(
                     clothingList,
-                    item -> showEditClothingDialog(item),
-                    item -> deleteClothingItem(item)
+                    item -> handleItemClick(item), // Edit the item on click
+                    item -> handleItemLongClick(item), // Enter selection mode on long press
+                    isSelectionMode // Pass selection mode flag
             );
 
             recyclerView.setAdapter(adapter);
@@ -134,6 +199,40 @@ public class ClothesFragment extends Fragment {
             Log.e(TAG, "Error fetching clothing items: " + e.getMessage(), e);
         }
         return clothingItems;
+    }
+
+    // Handle the item click to open the edit dialog
+    private void handleItemClick(ClothingItem item) {
+        showEditClothingDialog(item);
+    }
+
+    // Handle the item long press to start selection mode
+    private void handleItemLongClick(ClothingItem item) {
+        if (item == null) { // Check if null is passed, indicating exiting selection mode
+            exitSelectionMode();
+            return;
+        }
+        isSelectionMode = !isSelectionMode; // Toggle selection mode
+        adapter.setSelectionMode(isSelectionMode);
+        if (isSelectionMode) {
+            selectedItems.add(item);
+        } else {
+            selectedItems.clear(); // Clear selected items if exiting selection mode
+        }
+        deleteButton.setVisibility(isSelectionMode ? View.VISIBLE : View.GONE);
+        addToCollectionButton.setVisibility(isSelectionMode ? View.VISIBLE : View.GONE);
+        addClothesButton.setVisibility(isSelectionMode ? View.GONE : View.VISIBLE);
+        adapter.notifyDataSetChanged();
+    }
+    private void exitSelectionMode() {
+        isSelectionMode = false;
+        adapter.setSelectionMode(false);
+        selectedItems.clear();
+        adapter.notifyDataSetChanged();
+        deleteButton.setVisibility(View.GONE);
+        addToCollectionButton.setVisibility(View.GONE);
+        addClothesButton.setVisibility(View.VISIBLE);
+        // Hide delete button, etc.
     }
 
     private void showEditClothingDialog(ClothingItem item) {
@@ -184,6 +283,18 @@ public class ClothesFragment extends Fragment {
         }
     }
 
+    // Call this method to delete selected items
+    private void deleteSelectedItems() {
+        for (ClothingItem item : selectedItems) {
+            // Perform delete operation (delete from DB, remove from list)
+            new ClothingManager(requireContext()).deleteClothingItem(item.getId());
+        }
+
+        // Refresh the list after deletion
+        loadClothingItems();
+        Toast.makeText(requireContext(), "Items deleted!", Toast.LENGTH_SHORT).show();
+        exitSelectionMode();
+    }
     private void deleteClothingItem(ClothingItem item) {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Delete Clothing Item")
