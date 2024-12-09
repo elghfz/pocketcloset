@@ -4,7 +4,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="8dp">
+    android:padding="8dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:longClickable="true">
 
     <!-- Image of the clothing item -->
     <ImageView
@@ -22,40 +25,24 @@
         android:id="@+id/textViewClothingTags"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
         android:text="Tags"
         android:textSize="14sp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toEndOf="@id/imageViewClothing"
-        app:layout_constraintEnd_toStartOf="@id/buttonEditClothing"
+        app:layout_constraintEnd_toStartOf="@id/checkboxSelectClothing"
         app:layout_constraintBottom_toBottomOf="parent" />
 
-    <!-- Edit Button -->
-    <Button
-        android:id="@+id/buttonEditClothing"
+    <!-- Checkbox for selection mode (Initially hidden) -->
+    <CheckBox
+        android:id="@+id/checkboxSelectClothing"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Edit"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/buttonDeleteClothing"
-        app:layout_constraintBottom_toBottomOf="parent" />
-
-    <!-- Delete Button -->
-    <Button
-        android:id="@+id/buttonDeleteClothing"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Delete"
+        android:layout_marginEnd="8dp"
+        android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
-    <!-- Remove From Collection Button (Visible only in Collection Detail Fragment) -->
-    <Button
-        android:id="@+id/buttonRemoveFromCollection"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Remove from Collection"
-        app:layout_constraintTop_toBottomOf="@id/buttonEditClothing"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:visibility="gone" /> <!-- Initially hidden -->
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

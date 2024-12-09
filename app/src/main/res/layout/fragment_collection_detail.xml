@@ -14,7 +14,34 @@
         android:layout_weight="1"
         android:scrollbars="vertical" />
 
-    <!-- Button to add clothes to the collection -->
+    <!-- Buttons for managing collection -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        android:id="@+id/selectionModeButtons">
+
+        <!-- Delete Button (Visible in selection mode) -->
+        <Button
+            android:id="@+id/deleteButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Delete"
+            android:visibility="gone" />
+
+        <!-- Remove From Collection Button (Visible in selection mode) -->
+        <Button
+            android:id="@+id/removeFromCollectionButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Remove from Collection"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- Add Clothes Button (Visible outside selection mode) -->
     <Button
         android:id="@+id/button_add_clothes_to_collection"
         android:layout_width="match_parent"
