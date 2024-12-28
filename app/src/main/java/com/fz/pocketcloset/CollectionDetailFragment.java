@@ -29,9 +29,7 @@ public class CollectionDetailFragment extends Fragment {
     private ClothingAdapter adapter;
     private DatabaseHelper dbHelper;
     private int collectionId;
-    private Button addClothesButton;
-    private Button deleteButton;
-    private Button removeFromCollectionButton;
+    private Button renameButton, addClothesButton, removeFromCollectionButton;
     private boolean isSelectionMode = false;
     private final Set<ClothingItem> selectedItems = new HashSet<>();
 
@@ -41,29 +39,28 @@ public class CollectionDetailFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_collection_detail, container, false);
 
         try {
-            // Get collection ID from arguments
             collectionId = requireArguments().getInt("collection_id");
-
             dbHelper = new DatabaseHelper(requireContext());
 
-            // Set up RecyclerView
             recyclerView = view.findViewById(R.id.recyclerView);
             recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-            // Initialize buttons
+            renameButton = view.findViewById(R.id.button_rename_collection);
             addClothesButton = view.findViewById(R.id.button_add_clothes_to_collection);
-            deleteButton = view.findViewById(R.id.deleteButton);
             removeFromCollectionButton = view.findViewById(R.id.removeFromCollectionButton);
 
-            // Set button click listeners
+            renameButton.setOnClickListener(v -> showRenameDialog());
             addClothesButton.setOnClickListener(v -> showAddClothesDialog());
-            deleteButton.setOnClickListener(v -> deleteSelectedItems());
             removeFromCollectionButton.setOnClickListener(v -> removeSelectedFromCollection());
 
-            // Initial button visibility
-            updateButtonVisibility();
+            Button saveButton = view.findViewById(R.id.button_save);
+            saveButton.setOnClickListener(v -> {
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).saveAndReturnToCollections();
+                }
+            });
 
-            // Load clothes in the collection
+            updateButtonVisibility();
             loadClothesInCollection();
 
         } catch (Exception e) {
@@ -81,11 +78,11 @@ public class CollectionDetailFragment extends Fragment {
 
             adapter = new ClothingAdapter(
                     clothesInCollection,
-                    this::handleItemClick, // Short click
-                    this::handleItemLongClick, // Long click
+                    this::handleItemClick,
+                    this::handleItemLongClick,
                     isSelectionMode,
                     true, collectionId,
-                    itemId -> removeClothingFromCollection(itemId)
+                    null
             );
 
             recyclerView.setAdapter(adapter);
@@ -104,11 +101,17 @@ public class CollectionDetailFragment extends Fragment {
     }
 
     private void handleItemLongClick(ClothingItem item) {
+        if (item == null) {
+            exitSelectionMode(); // Exit when fragment is notified by adapter
+            return;
+        }
         if (!isSelectionMode) {
             isSelectionMode = true;
+            updateButtonVisibility(); // Show Remove button
         }
         toggleItemSelection(item);
     }
+
 
     private void toggleItemSelection(ClothingItem item) {
         if (selectedItems.contains(item)) {
@@ -117,12 +120,12 @@ public class CollectionDetailFragment extends Fragment {
             selectedItems.add(item);
         }
 
+        // Exit selection mode if no items are selected
         if (selectedItems.isEmpty()) {
             exitSelectionMode();
         }
 
         adapter.notifyDataSetChanged();
-        updateButtonVisibility();
     }
 
     private void exitSelectionMode() {
@@ -133,35 +136,59 @@ public class CollectionDetailFragment extends Fragment {
     }
 
     private void updateButtonVisibility() {
-        addClothesButton.setVisibility(isSelectionMode ? View.GONE : View.VISIBLE);
-        deleteButton.setVisibility(isSelectionMode ? View.VISIBLE : View.GONE);
-        removeFromCollectionButton.setVisibility(isSelectionMode ? View.VISIBLE : View.GONE);
-    }
-
-    private void removeClothingFromCollection(int clothingItemId) {
-        try {
-            new CollectionsManager(requireContext()).removeClothingFromCollection(clothingItemId, collectionId);
-            Toast.makeText(requireContext(), "Clothing removed from collection!", Toast.LENGTH_SHORT).show();
-            loadClothesInCollection();
-        } catch (Exception e) {
-            Log.e(TAG, "Error removing clothing from collection: " + e.getMessage(), e);
+        if (isSelectionMode) {
+            renameButton.setVisibility(View.GONE);
+            addClothesButton.setVisibility(View.GONE);
+            removeFromCollectionButton.setVisibility(View.VISIBLE);
+        } else {
+            renameButton.setVisibility(View.VISIBLE);
+            addClothesButton.setVisibility(View.VISIBLE);
+            removeFromCollectionButton.setVisibility(View.GONE);
         }
     }
 
     private void removeSelectedFromCollection() {
         for (ClothingItem item : selectedItems) {
-            removeClothingFromCollection(item.getId());
+            new CollectionsManager(requireContext())
+                    .removeClothingFromCollection(item.getId(), collectionId);
         }
+        Toast.makeText(requireContext(), "Items removed from collection!", Toast.LENGTH_SHORT).show();
         exitSelectionMode();
         loadClothesInCollection();
     }
 
-    private void deleteSelectedItems() {
-        for (ClothingItem item : selectedItems) {
-            deleteClothingItem(item);
+    private void showRenameDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Rename Collection");
+
+        final EditText input = new EditText(requireContext());
+        builder.setView(input);
+
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            String newName = input.getText().toString().trim();
+            if (!newName.isEmpty()) {
+                renameCollection(newName);
+            } else {
+                Toast.makeText(requireContext(), "Name cannot be empty!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.show();
+    }
+
+    private void renameCollection(String newName) {
+        try {
+            SQLiteDatabase db = dbHelper.getWritableDatabase();
+            ContentValues values = new ContentValues();
+            values.put("name", newName);
+            db.update("Collections", values, "id = ?", new String[]{String.valueOf(collectionId)});
+            db.close();
+            Toast.makeText(requireContext(), "Collection renamed!", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Log.e(TAG, "Error renaming collection: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Error renaming collection.", Toast.LENGTH_SHORT).show();
         }
-        exitSelectionMode();
-        loadClothesInCollection();
     }
 
     private void showAddClothesDialog() {
@@ -236,21 +263,10 @@ public class CollectionDetailFragment extends Fragment {
             values.put("tags", tags);
             db.update("Clothes", values, "id = ?", new String[]{String.valueOf(id)});
             db.close();
+            Toast.makeText(requireContext(), "Clothing item updated!", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Log.e(TAG, "Error updating clothing item: " + e.getMessage(), e);
-        }
-    }
-
-    private void deleteClothingItem(ClothingItem item) {
-        try {
-            SQLiteDatabase db = dbHelper.getWritableDatabase();
-            db.delete("Clothes", "id = ?", new String[]{String.valueOf(item.getId())});
-            db.close();
-            loadClothesInCollection();
-            Toast.makeText(requireContext(), "Clothing item deleted!", Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            Log.e(TAG, "Error deleting clothing item: " + e.getMessage(), e);
-            Toast.makeText(requireContext(), "Error deleting clothing item.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), "Error updating clothing item.", Toast.LENGTH_SHORT).show();
         }
     }
 }

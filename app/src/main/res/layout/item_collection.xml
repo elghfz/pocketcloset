@@ -6,7 +6,6 @@
     android:layout_height="wrap_content"
     android:padding="8dp">
 
-    <!-- Collection Name -->
     <TextView
         android:id="@+id/textViewCollectionName"
         android:layout_width="0dp"
@@ -16,26 +15,15 @@
         android:textStyle="bold"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/buttonEditCollection"
         app:layout_constraintBottom_toBottomOf="parent" />
 
-    <!-- Edit Button -->
-    <Button
-        android:id="@+id/buttonEditCollection"
+    <CheckBox
+        android:id="@+id/checkbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Edit"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/buttonDeleteCollection"
-        app:layout_constraintBottom_toBottomOf="parent" />
-
-    <!-- Delete Button -->
-    <Button
-        android:id="@+id/buttonDeleteCollection"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Delete"
+        android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

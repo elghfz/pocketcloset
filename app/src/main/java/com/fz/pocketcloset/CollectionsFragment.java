@@ -16,7 +16,9 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class CollectionsFragment extends Fragment {
 
@@ -25,24 +27,27 @@ public class CollectionsFragment extends Fragment {
     private CollectionAdapter adapter;
     private DatabaseHelper dbHelper;
 
+    private Button addCollectionButton, deleteButton;
+    private boolean isSelectionMode = false;
+    private final Set<Collection> selectedItems = new HashSet<>();
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_collections, container, false);
 
         try {
-            // Initialize DatabaseHelper
             dbHelper = new DatabaseHelper(requireContext());
-
-            // Set up RecyclerView
             recyclerView = view.findViewById(R.id.recyclerView);
             recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-            // Set up Add Collection button
-            Button addCollectionButton = view.findViewById(R.id.button_add_collection);
-            addCollectionButton.setOnClickListener(v -> showAddCollectionDialog());
+            addCollectionButton = view.findViewById(R.id.button_add_collection);
+            deleteButton = view.findViewById(R.id.button_delete);
 
-            // Load Collections
+            addCollectionButton.setOnClickListener(v -> showAddCollectionDialog());
+            deleteButton.setOnClickListener(v -> deleteSelectedCollections());
+
+            updateButtonVisibility();
             loadCollections();
 
         } catch (Exception e) {
@@ -53,25 +58,80 @@ public class CollectionsFragment extends Fragment {
         return view;
     }
 
-    void loadCollections() {
+
+    private void loadCollections() {
         try {
-            // Fetch collections from the database
             List<Collection> collections = new CollectionsManager(requireContext()).getAllCollections();
 
-            // Initialize adapter
             adapter = new CollectionAdapter(
                     collections,
-                    requireContext(),
-                    dbHelper,
-                    collection -> showEditCollectionDialog(collection),
-                    collection -> deleteCollection(collection)
+                    this::handleItemClick,
+                    this::handleItemLongClick,
+                    isSelectionMode
             );
 
             recyclerView.setAdapter(adapter);
-
         } catch (Exception e) {
             Log.e(TAG, "Error loading collections: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Error loading collections.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void handleItemClick(Collection collection) {
+        if (isSelectionMode) {
+            toggleItemSelection(collection);
+        } else {
+            openCollection(collection);
+        }
+    }
+
+    private void handleItemLongClick(Collection collection) {
+        if (collection == null) {
+            exitSelectionMode();
+            return;
+        }
+        if (!isSelectionMode) {
+            isSelectionMode = true;
+            updateButtonVisibility(); // Show Delete Button
+        }
+        toggleItemSelection(collection);
+    }
+
+
+    private void toggleItemSelection(Collection collection) {
+        if (selectedItems.contains(collection)) {
+            selectedItems.remove(collection);
+        } else {
+            selectedItems.add(collection);
+        }
+
+        // Exit selection mode if all items are deselected
+        if (selectedItems.isEmpty() && isSelectionMode) {
+            exitSelectionMode();
+        }
+
+        adapter.notifyDataSetChanged();
+    }
+
+    private void exitSelectionMode() {
+        isSelectionMode = false;
+        selectedItems.clear();
+        adapter.setSelectionMode(false);
+        updateButtonVisibility(); // This hides the Delete Button
+    }
+
+
+    private void deleteSelectedCollections() {
+        try {
+            for (Collection collection : selectedItems) {
+                new CollectionsManager(requireContext()).deleteCollection(collection.getId());
+            }
+            Toast.makeText(requireContext(), "Selected collections deleted!", Toast.LENGTH_SHORT).show();
+            exitSelectionMode();
+            loadCollections();
+        } catch (Exception e) {
+            Log.e(TAG, "Error deleting selected collections: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Error deleting collections.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -99,59 +159,30 @@ public class CollectionsFragment extends Fragment {
         builder.show();
     }
 
-    private void showEditCollectionDialog(Collection collection) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Edit Collection");
-
-        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_collection, null);
-        builder.setView(dialogView);
-
-        // Input for collection name
-        EditText inputName = dialogView.findViewById(R.id.input_collection_name);
-        inputName.setText(collection.getName());
-
-        builder.setPositiveButton("Save", (dialog, which) -> {
-            String newName = inputName.getText().toString();
-            if (!newName.isEmpty()) {
-                new CollectionsManager(requireContext()).updateCollectionName(collection.getId(), newName);
-                loadCollections(); // Refresh list
-                Toast.makeText(requireContext(), "Collection updated!", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(requireContext(), "Name cannot be empty.", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-        builder.show();
-    }
-
-    private void deleteCollection(Collection collection) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Delete Collection")
-                .setMessage("Are you sure you want to delete this collection?")
-                .setPositiveButton("Delete", (dialog, which) -> {
-                    new CollectionsManager(requireContext()).deleteCollection(collection.getId());
-                    loadCollections(); // Refresh list
-                    Toast.makeText(requireContext(), "Collection deleted!", Toast.LENGTH_SHORT).show();
-                })
-                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-        builder.show();
-    }
-
     private void openCollection(Collection collection) {
-        Fragment collectionDetailFragment = new CollectionDetailFragment();
-
-        // Pass collection ID as an argument
-        Bundle bundle = new Bundle();
-        bundle.putInt("collection_id", collection.getId());
-        collectionDetailFragment.setArguments(bundle);
-
-        // Replace the current fragment with the CollectionDetailFragment
-        requireActivity().getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, collectionDetailFragment)
-                .addToBackStack(null)
-                .commit();
+        if (!isSelectionMode) {
+            Fragment collectionDetailFragment = new CollectionDetailFragment();
+            Bundle bundle = new Bundle();
+            bundle.putInt("collection_id", collection.getId());
+            collectionDetailFragment.setArguments(bundle);
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, collectionDetailFragment)
+                    .addToBackStack(null)
+                    .commit();
+        }
     }
+
+    private void updateButtonVisibility() {
+        if (isSelectionMode) {
+            addCollectionButton.setVisibility(View.GONE); // Hide "Add Collection" button
+            deleteButton.setVisibility(View.VISIBLE);    // Show "Delete" button
+        } else {
+            addCollectionButton.setVisibility(View.VISIBLE); // Show "Add Collection" button
+            deleteButton.setVisibility(View.GONE);           // Hide "Delete" button
+        }
+    }
+
+
 
 }

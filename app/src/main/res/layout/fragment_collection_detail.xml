@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
@@ -18,33 +17,38 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:visibility="gone"
-        android:id="@+id/selectionModeButtons">
+        android:orientation="horizontal">
 
-        <!-- Delete Button (Visible in selection mode) -->
+        <!-- Rename Button -->
         <Button
-            android:id="@+id/deleteButton"
+            android:id="@+id/button_rename_collection"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Delete"
-            android:visibility="gone" />
+            android:text="Rename" />
 
-        <!-- Remove From Collection Button (Visible in selection mode) -->
+        <!-- Add Clothes Button -->
+        <Button
+            android:id="@+id/button_add_clothes_to_collection"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Add Clothes" />
+
+        <!-- Remove From Collection Button -->
         <Button
             android:id="@+id/removeFromCollectionButton"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Remove from Collection"
-            android:visibility="gone" />
-    </LinearLayout>
+            android:visibility="gone"
+            android:text="Remove Selected Items" />
+        <Button
+            android:id="@+id/button_save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Save"
+            android:layout_gravity="end"
+            android:layout_margin="16dp" />
 
-    <!-- Add Clothes Button (Visible outside selection mode) -->
-    <Button
-        android:id="@+id/button_add_clothes_to_collection"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Add Clothes" />
+    </LinearLayout>
 </LinearLayout>
