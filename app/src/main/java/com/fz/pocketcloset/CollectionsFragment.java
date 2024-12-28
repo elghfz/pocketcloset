@@ -161,17 +161,12 @@ public class CollectionsFragment extends Fragment {
 
     private void openCollection(Collection collection) {
         if (!isSelectionMode) {
-            Fragment collectionDetailFragment = new CollectionDetailFragment();
-            Bundle bundle = new Bundle();
-            bundle.putInt("collection_id", collection.getId());
-            collectionDetailFragment.setArguments(bundle);
-            requireActivity().getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.fragment_container, collectionDetailFragment)
-                    .addToBackStack(null)
-                    .commit();
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).openCollectionDetail(collection.getId());
+            }
         }
     }
+
 
     private void updateButtonVisibility() {
         if (isSelectionMode) {

@@ -53,12 +53,8 @@ public class CollectionDetailFragment extends Fragment {
             addClothesButton.setOnClickListener(v -> showAddClothesDialog());
             removeFromCollectionButton.setOnClickListener(v -> removeSelectedFromCollection());
 
-            Button saveButton = view.findViewById(R.id.button_save);
-            saveButton.setOnClickListener(v -> {
-                if (getActivity() instanceof MainActivity) {
-                    ((MainActivity) getActivity()).saveAndReturnToCollections();
-                }
-            });
+            Button closeButton = view.findViewById(R.id.button_close_collection);
+            closeButton.setOnClickListener(v -> closeCollection());
 
             updateButtonVisibility();
             loadClothesInCollection();
@@ -267,6 +263,13 @@ public class CollectionDetailFragment extends Fragment {
         } catch (Exception e) {
             Log.e(TAG, "Error updating clothing item: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Error updating clothing item.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void closeCollection() {
+        // Call the MainActivity's closeCollectionDetail method
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).closeCollectionDetail();
         }
     }
 }
