@@ -14,6 +14,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -62,7 +63,7 @@ public class ClothesFragment extends Fragment {
             clothingManager = new ClothingManager(requireContext());
 
             recyclerView = view.findViewById(R.id.recyclerView);
-            recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+            recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 4));
             dbHelper = new DatabaseHelper(requireContext());
 
             imagePickerHelper = new ImagePickerHelper(
@@ -227,37 +228,6 @@ public class ClothesFragment extends Fragment {
         builder.show();
     }
 
-    private void showEditClothingDialog(ClothingItem item) {
-        try {
-            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-            builder.setTitle("Edit Clothing Item");
-
-            View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_clothes, null);
-            EditText inputTags = dialogView.findViewById(R.id.input_tags);
-            inputTags.setText(item.getTags());
-
-            builder.setView(dialogView);
-
-            builder.setPositiveButton("Save", (dialog, which) -> {
-                String newTags = inputTags.getText().toString();
-                if (!newTags.isEmpty()) {
-                    clothingManager.updateClothingItem(item.getId(), newTags);
-                    loadClothingItems();
-                    Toast.makeText(requireContext(), "Clothing item updated!", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(requireContext(), "Tags cannot be empty.", Toast.LENGTH_SHORT).show();
-                }
-            });
-
-            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-            builder.show();
-
-        } catch (Exception e) {
-            Log.e(TAG, "Error showing edit dialog: " + e.getMessage(), e);
-            Toast.makeText(requireContext(), "Error editing clothing item.", Toast.LENGTH_SHORT).show();
-        }
-    }
-
     private void showAddClothesDialog() {
         try {
             // Use the ImagePickerHelper to open the image picker
@@ -271,8 +241,6 @@ public class ClothesFragment extends Fragment {
             Toast.makeText(requireContext(), "Error adding clothing item.", Toast.LENGTH_SHORT).show();
         }
     }
-
-
 
     private void updateButtonVisibility() {
         if (isSelectionMode) {

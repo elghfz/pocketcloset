@@ -49,12 +49,9 @@ public class MainActivity extends AppCompatActivity {
         // Clear back stack to remove any detail fragments
         fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
-        // Hide all fragments and show the target fragment
+        // Begin transaction to hide current and show target fragment
         FragmentTransaction transaction = fragmentManager.beginTransaction();
-        for (Fragment fragment : fragmentManager.getFragments()) {
-            transaction.hide(fragment);
-        }
-        transaction.show(targetFragment).commit();
+        transaction.hide(activeFragment).show(targetFragment).commit();
 
         activeFragment = targetFragment;
     }
@@ -81,10 +78,8 @@ public class MainActivity extends AppCompatActivity {
     public void closeCollectionDetail() {
         FragmentManager fragmentManager = getSupportFragmentManager();
 
-        // Pop back stack to remove the detail fragment
-        fragmentManager.popBackStackImmediate();
-
-        // Ensure CollectionsFragment is shown
+        // Remove the detail fragment and show CollectionsFragment
+        fragmentManager.popBackStack(); // Pop the CollectionDetailFragment from back stack
         fragmentManager.beginTransaction()
                 .show(collectionsFragment)
                 .commit();
@@ -127,8 +122,8 @@ public class MainActivity extends AppCompatActivity {
     public void navigateBackToCollectionDetail() {
         FragmentManager fragmentManager = getSupportFragmentManager();
 
-        // Clear back stack and switch back to collection detail
-        fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        // Remove the current active fragment and return to CollectionDetailFragment
+        fragmentManager.popBackStack(); // Pop the ClothingDetailFragment from back stack
         fragmentManager.beginTransaction()
                 .hide(activeFragment)
                 .show(collectionsFragment) // Ensure CollectionsFragment is shown first

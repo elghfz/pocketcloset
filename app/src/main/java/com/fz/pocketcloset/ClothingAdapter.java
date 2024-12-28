@@ -68,9 +68,6 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
         // Bind the clothing image
         holder.imageView.setImageURI(item.getImagePath() != null ? Uri.parse(item.getImagePath()) : null);
 
-        // Bind the clothing tags
-        holder.tagsTextView.setText(item.getTags());
-
         // Handle short click for editing or toggling selection
         holder.itemView.setOnClickListener(v -> {
             if (!selectionMode) {
@@ -142,8 +139,7 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
         public ClothingViewHolder(@NonNull View itemView) {
             super(itemView);
             imageView = itemView.findViewById(R.id.imageViewClothing);
-            tagsTextView = itemView.findViewById(R.id.textViewClothingTags);
-            selectCheckbox = itemView.findViewById(R.id.checkboxSelectClothing);
+            selectCheckbox = itemView.findViewById(R.id.checkboxClothing);
         }
     }
 }
