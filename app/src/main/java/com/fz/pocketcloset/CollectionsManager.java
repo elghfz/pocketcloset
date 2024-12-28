@@ -155,6 +155,28 @@ public class CollectionsManager {
         }
     }
 
+    public List<Collection> getCollectionsForClothing(int clothingId) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        List<Collection> collections = new ArrayList<>();
+
+        String query = "SELECT c.id, c.name FROM Collections c " +
+                "INNER JOIN Clothes_Collections cc ON c.id = cc.collection_id " +
+                "WHERE cc.clothes_id = ?";
+        try (Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(clothingId)})) {
+            while (cursor.moveToNext()) {
+                int id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
+                String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
+
+                collections.add(new Collection(id, name));
+            }
+        } catch (Exception e) {
+            Log.e("CollectionsManager", "Error fetching collections for clothing: " + e.getMessage(), e);
+        } finally {
+            db.close();
+        }
+
+        return collections;
+    }
 
 
 

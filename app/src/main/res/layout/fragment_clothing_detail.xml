@@ -1,0 +1,59 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <ImageView
+        android:id="@+id/clothingImageView"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:scaleType="centerCrop"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/tagsTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Tags"
+        android:padding="8dp"
+        android:background="#EAEAEA"
+        android:layout_marginBottom="16dp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/collectionsRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scrollbars="vertical" />
+
+    <Button
+        android:id="@+id/button_edit_clothing"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Edit Tags"
+        android:layout_marginTop="8dp" />
+
+    <Button
+        android:id="@+id/button_add_to_collection"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Add to Collection"
+        android:layout_marginTop="8dp" />
+
+    <Button
+        android:id="@+id/button_delete_clothing"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Delete"
+        android:layout_marginTop="8dp" />
+
+    <Button
+        android:id="@+id/button_save"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save"
+        android:layout_marginTop="16dp" />
+
+</LinearLayout>

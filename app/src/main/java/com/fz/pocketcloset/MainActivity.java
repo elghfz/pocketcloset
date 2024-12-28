@@ -12,9 +12,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Fragment clothesFragment;
     private Fragment collectionsFragment;
-    private Fragment collectionDetailFragment; // Tracks the CollectionDetailFragment
     private Fragment activeFragment; // Tracks the currently active fragment
-    private boolean isInDetailView = false; // Tracks if user is in CollectionDetailFragment
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,11 +26,9 @@ public class MainActivity extends AppCompatActivity {
         // Add fragments to the FragmentManager
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction transaction = fragmentManager.beginTransaction();
-
-        // Add and show ClothesFragment initially
         transaction.add(R.id.fragment_container, clothesFragment, "ClothesFragment");
         transaction.add(R.id.fragment_container, collectionsFragment, "CollectionsFragment").hide(collectionsFragment);
-        activeFragment = clothesFragment; // Start with ClothesFragment as active
+        activeFragment = clothesFragment; // Start with ClothesFragment as the active fragment
         transaction.commit();
 
         // Bottom navigation setup
@@ -41,64 +37,103 @@ public class MainActivity extends AppCompatActivity {
             if (item.getItemId() == R.id.nav_clothes) {
                 switchToFragment(clothesFragment);
             } else if (item.getItemId() == R.id.nav_collections) {
-                if (isInDetailView && collectionDetailFragment != null) {
-                    // If detail view is active, switch to it
-                    switchToFragment(collectionDetailFragment);
-                } else {
-                    // Otherwise, show the main collections list
-                    switchToFragment(collectionsFragment);
-                }
+                switchToFragment(collectionsFragment);
             }
             return true;
         });
-
-        // Set initial selected item to ClothesFragment
-        bottomNavigation.setSelectedItemId(R.id.nav_clothes);
     }
 
     private void switchToFragment(Fragment targetFragment) {
         FragmentManager fragmentManager = getSupportFragmentManager();
+
+        // Clear back stack to remove any detail fragments
+        fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
+        // Hide all fragments and show the target fragment
         FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.hide(activeFragment).show(targetFragment).commit();
+        for (Fragment fragment : fragmentManager.getFragments()) {
+            transaction.hide(fragment);
+        }
+        transaction.show(targetFragment).commit();
+
         activeFragment = targetFragment;
     }
 
     public void openCollectionDetail(int collectionId) {
-        // Open CollectionDetailFragment
-        if (collectionDetailFragment == null) {
-            collectionDetailFragment = new CollectionDetailFragment();
-        }
+        FragmentManager fragmentManager = getSupportFragmentManager();
 
-        // Pass the collection ID to the detail fragment
+        // Create a new instance of CollectionDetailFragment
+        CollectionDetailFragment collectionDetailFragment = new CollectionDetailFragment();
         Bundle args = new Bundle();
         args.putInt("collection_id", collectionId);
         collectionDetailFragment.setArguments(args);
 
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        if (!collectionDetailFragment.isAdded()) {
-            fragmentManager.beginTransaction()
-                    .add(R.id.fragment_container, collectionDetailFragment, "CollectionDetailFragment")
-                    .hide(activeFragment)
-                    .commit();
-        } else {
-            fragmentManager.beginTransaction()
-                    .hide(activeFragment)
-                    .show(collectionDetailFragment)
-                    .commit();
-        }
+        // Add the new fragment and hide the active one
+        fragmentManager.beginTransaction()
+                .hide(activeFragment)
+                .add(R.id.fragment_container, collectionDetailFragment, "CollectionDetailFragment")
+                .addToBackStack(null) // Add to back stack to allow back navigation
+                .commit();
+
         activeFragment = collectionDetailFragment;
-        isInDetailView = true; // Mark that the detail view is active
     }
 
     public void closeCollectionDetail() {
-        // Navigate back to the collections list
         FragmentManager fragmentManager = getSupportFragmentManager();
+
+        // Pop back stack to remove the detail fragment
+        fragmentManager.popBackStackImmediate();
+
+        // Ensure CollectionsFragment is shown
         fragmentManager.beginTransaction()
-                .hide(collectionDetailFragment)
                 .show(collectionsFragment)
                 .commit();
+
         activeFragment = collectionsFragment;
-        collectionDetailFragment = null; // Clear reference to detail fragment
-        isInDetailView = false; // Mark that we're no longer in the detail view
+    }
+
+    public void openClothingDetail(int clothingId) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+
+        // Create a new instance of ClothingDetailFragment
+        ClothingDetailFragment clothingDetailFragment = new ClothingDetailFragment();
+        Bundle args = new Bundle();
+        args.putInt("clothing_id", clothingId);
+        clothingDetailFragment.setArguments(args);
+
+        // Add the new fragment and hide the active one
+        fragmentManager.beginTransaction()
+                .hide(activeFragment)
+                .add(R.id.fragment_container, clothingDetailFragment, "ClothingDetailFragment")
+                .addToBackStack(null) // Add to back stack to allow back navigation
+                .commit();
+
+        activeFragment = clothingDetailFragment;
+    }
+
+    public void navigateBackToClothesFragment() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+
+        // Clear back stack and switch back to clothes fragment
+        fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        fragmentManager.beginTransaction()
+                .hide(activeFragment)
+                .show(clothesFragment)
+                .commit();
+
+        activeFragment = clothesFragment;
+    }
+
+    public void navigateBackToCollectionDetail() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+
+        // Clear back stack and switch back to collection detail
+        fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        fragmentManager.beginTransaction()
+                .hide(activeFragment)
+                .show(collectionsFragment) // Ensure CollectionsFragment is shown first
+                .commit();
+
+        activeFragment = collectionsFragment;
     }
 }

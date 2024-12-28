@@ -39,23 +39,6 @@ public class ClothingManager {
     }
 
     /**
-     * Add a new clothing item to the database.
-     *
-     * @param tags The tags/metadata for the new clothing item.
-     */
-    public void addClothingItem(String tags) {
-        try (SQLiteDatabase db = dbHelper.getWritableDatabase()) {
-            ContentValues values = new ContentValues();
-            values.put("tags", tags);
-            values.put("imagePath", ""); // Placeholder for imagePath, if not provided
-
-            db.insert("Clothes", null, values);
-        } catch (Exception e) {
-            Log.e(TAG, "Error adding clothing item: " + e.getMessage(), e);
-        }
-    }
-
-    /**
      * Update an existing clothing item in the database.
      *
      * @param id   The ID of the clothing item to update.
@@ -106,19 +89,27 @@ public class ClothingManager {
         }
     }
 
-    /**
-     * Remove a clothing item from a specific collection.
-     *
-     * @param clothingItemId    The ID of the clothing item to remove.
-     * @param collectionId      The ID of the collection from which to remove the item.
-     */
-    public void removeClothingFromCollection(int clothingItemId, int collectionId) {
-        try (SQLiteDatabase db = dbHelper.getWritableDatabase()) {
-            db.delete("CollectionItems", "clothingId = ? AND collectionId = ?",
-                    new String[]{String.valueOf(clothingItemId), String.valueOf(collectionId)});
+
+    public ClothingItem getClothingById(int clothingId) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        ClothingItem clothingItem = null;
+
+        String query = "SELECT * FROM Clothes WHERE id = ?";
+        try (Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(clothingId)})) {
+            if (cursor.moveToFirst()) {
+                int id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
+                String imagePath = cursor.getString(cursor.getColumnIndexOrThrow("imagePath"));
+                String tags = cursor.getString(cursor.getColumnIndexOrThrow("tags"));
+
+                clothingItem = new ClothingItem(id, imagePath, tags);
+            }
         } catch (Exception e) {
-            Log.e(TAG, "Error removing clothing item from collection: " + e.getMessage(), e);
+            Log.e("ClothingManager", "Error fetching clothing by ID: " + e.getMessage(), e);
+        } finally {
+            db.close();
         }
+
+        return clothingItem;
     }
 
     public DatabaseHelper getDbHelper() {

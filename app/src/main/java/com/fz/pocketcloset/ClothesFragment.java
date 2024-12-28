@@ -118,9 +118,15 @@ public class ClothesFragment extends Fragment {
         if (isSelectionMode) {
             toggleItemSelection(item);
         } else {
-            showEditClothingDialog(item);
+            if (getActivity() instanceof MainActivity) {
+                MainActivity mainActivity = (MainActivity) getActivity();
+                mainActivity.openClothingDetail(item.getId());
+            }
         }
     }
+
+
+
 
     private void handleItemLongClick(ClothingItem item) {
         if (item == null) {
