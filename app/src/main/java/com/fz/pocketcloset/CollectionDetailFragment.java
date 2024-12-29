@@ -26,6 +26,7 @@ import java.util.Set;
 public class CollectionDetailFragment extends Fragment {
 
     private static final String TAG = "CollectionDetailFragment";
+    private TextView collectionNameTextView;
     private RecyclerView recyclerView;
     private ClothingAdapter adapter;
     private DatabaseHelper dbHelper;
@@ -51,8 +52,16 @@ public class CollectionDetailFragment extends Fragment {
             recyclerView = view.findViewById(R.id.recyclerView);
             recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 2)); // Grid view with 2 columns
 
-            TextView titleTextView = view.findViewById(R.id.titleTextView);
-            titleTextView.setText(collectionName); // Set collection name dynamically
+            collectionNameTextView = view.findViewById(R.id.textViewCollectionName);
+
+            // Get the collection name from arguments
+            Bundle args = getArguments();
+            if (args != null) {
+                String collectionName = args.getString("collection_name", "Default Collection");
+                collectionNameTextView.setText(collectionName);
+            } else {
+                collectionNameTextView.setText("Default Collection");
+            }
 
             renameButton = view.findViewById(R.id.button_rename_collection);
             addClothesButton = view.findViewById(R.id.button_add_clothes_to_collection);
@@ -96,6 +105,20 @@ public class CollectionDetailFragment extends Fragment {
             Toast.makeText(requireContext(), "Error loading clothes in collection.", Toast.LENGTH_SHORT).show();
         }
     }
+
+    public void refreshClothingList() {
+        try {
+            // Reload clothing items in this collection
+            List<ClothingItem> clothesInCollection = new CollectionsManager(requireContext())
+                    .getClothesInCollection(collectionId);
+
+            adapter.updateData(clothesInCollection); // Update adapter with refreshed data
+        } catch (Exception e) {
+            Log.e(TAG, "Error refreshing clothing list in collection: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Error refreshing collection data.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
 
     private void handleItemClick(ClothingItem item) {
         if (isSelectionMode) {

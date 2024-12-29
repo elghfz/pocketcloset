@@ -87,7 +87,7 @@ public class ClothingDetailFragment extends Fragment {
                         collection -> {
                             // Open the CollectionDetailFragment for the selected collection
                             if (getActivity() instanceof MainActivity) {
-                                ((MainActivity) getActivity()).openCollectionDetail(collection.getId());
+                                ((MainActivity) getActivity()).openCollectionDetail(collection.getId(), collection.getName());
                             }
                         },
                         null, // No long-click handler for collection items here
@@ -179,12 +179,18 @@ public class ClothingDetailFragment extends Fragment {
 
             Toast.makeText(requireContext(), "Clothing item deleted!", Toast.LENGTH_SHORT).show();
 
-            // Navigate back to the correct previous fragment
+            // Navigate back and refresh the list in the parent fragment
             navigateBack();
+
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).refreshClothingList(); // Add a method in MainActivity to trigger refresh
+            }
         } catch (Exception e) {
             Log.e(TAG, "Error deleting clothing item: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Failed to delete clothing item.", Toast.LENGTH_SHORT).show();
         }
     }
+
+
 
 }

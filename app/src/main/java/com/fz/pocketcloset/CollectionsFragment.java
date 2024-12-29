@@ -162,7 +162,7 @@ public class CollectionsFragment extends Fragment {
     private void openCollection(Collection collection) {
         if (!isSelectionMode) {
             if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).openCollectionDetail(collection.getId());
+                ((MainActivity) getActivity()).openCollectionDetail(collection.getId(), collection.getName());
             }
         }
     }

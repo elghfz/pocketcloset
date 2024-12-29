@@ -11,13 +11,14 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.ClothingViewHolder> {
 
-    private final List<ClothingItem> clothingList;
+    private List<ClothingItem> clothingList;
     private final OnItemClickListener onItemClickListener;
     private final OnItemLongClickListener onItemLongClickListener;
     private final OnRemoveFromCollectionListener onRemoveFromCollectionListener;
@@ -25,6 +26,7 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
     private final Set<ClothingItem> selectedItems = new HashSet<>();
     private final boolean showRemoveFromCollectionButton;
     private final int currentCollectionId;
+
 
     public interface OnItemClickListener {
         void onItemClick(ClothingItem item);
@@ -45,7 +47,7 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
                            boolean showRemoveFromCollectionButton,
                            int currentCollectionId,
                            OnRemoveFromCollectionListener onRemoveFromCollectionListener) {
-        this.clothingList = clothingList;
+        this.clothingList = clothingList != null ? clothingList : new ArrayList<>();
         this.onItemClickListener = onItemClickListener;
         this.onItemLongClickListener = onItemLongClickListener;
         this.selectionMode = selectionMode;
@@ -105,15 +107,26 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
         });
     }
 
+
+    public void updateData(List<ClothingItem> newClothingList) {
+        this.clothingList = new ArrayList<>(newClothingList); // Replace the current list
+    }
+
+
+
+
+
     @Override
     public int getItemCount() {
-        return clothingList.size();
+        return clothingList != null ? clothingList.size() : 0;
     }
+
 
     public void setSelectionMode(boolean selectionMode) {
         this.selectionMode = selectionMode;
-        notifyDataSetChanged(); // Update UI to reflect selection mode
+        // Do not notify changes here; leave it to the Fragment to manage
     }
+
 
     private void toggleSelection(ClothingItem item, ClothingViewHolder holder) {
         if (selectedItems.contains(item)) {

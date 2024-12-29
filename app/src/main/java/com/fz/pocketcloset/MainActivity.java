@@ -56,24 +56,24 @@ public class MainActivity extends AppCompatActivity {
         activeFragment = targetFragment;
     }
 
-    public void openCollectionDetail(int collectionId) {
+    public void openCollectionDetail(int collectionId, String collectionName) {
         FragmentManager fragmentManager = getSupportFragmentManager();
 
-        // Create a new instance of CollectionDetailFragment
         CollectionDetailFragment collectionDetailFragment = new CollectionDetailFragment();
         Bundle args = new Bundle();
         args.putInt("collection_id", collectionId);
+        args.putString("collection_name", collectionName); // Pass the name
         collectionDetailFragment.setArguments(args);
 
-        // Add the new fragment and hide the active one
         fragmentManager.beginTransaction()
                 .hide(activeFragment)
                 .add(R.id.fragment_container, collectionDetailFragment, "CollectionDetailFragment")
-                .addToBackStack(null) // Add to back stack to allow back navigation
+                .addToBackStack(null)
                 .commit();
 
         activeFragment = collectionDetailFragment;
     }
+
 
     public void closeCollectionDetail() {
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -131,4 +131,13 @@ public class MainActivity extends AppCompatActivity {
 
         activeFragment = collectionsFragment;
     }
+
+
+    public void refreshClothingList() {
+        if (clothesFragment instanceof ClothesFragment) {
+            ((ClothesFragment) clothesFragment).reloadData(); // Call a new method in ClothesFragment
+        }
+    }
+
+
 }

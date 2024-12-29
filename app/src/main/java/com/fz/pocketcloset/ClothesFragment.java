@@ -8,17 +8,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,7 +35,9 @@ public class ClothesFragment extends Fragment {
     private Button deleteButton, addToCollectionButton, addClothesButton;
     private ImagePickerHelper imagePickerHelper;
     private DatabaseHelper dbHelper;
-
+    private Button sortButton, clearFilterButton;
+    private List<ClothingItem> clothingList; // Original, unfiltered list
+    private List<ClothingItem> filteredClothingList; // Filtered list
 
     @Override
     public void onPause() {
@@ -61,28 +63,35 @@ public class ClothesFragment extends Fragment {
 
         try {
             clothingManager = new ClothingManager(requireContext());
-
             recyclerView = view.findViewById(R.id.recyclerView);
             recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 4));
             dbHelper = new DatabaseHelper(requireContext());
 
             imagePickerHelper = new ImagePickerHelper(
-                    this, // Pass the current fragment
+                    this,
                     dbHelper,
-                    unused -> loadClothingItems() // Callback to refresh the list after adding
+                    unused -> {
+                        clothingList = clothingManager.getAllClothingItems(); // Refresh full list
+                        filteredClothingList = new ArrayList<>(clothingList); // Reset filtered list
+                        updateAdapterSafely(); // Update adapter
+                        updateClearFilterButtonVisibility(Collections.emptySet()); // Reset to no filter
+                    }
             );
 
             deleteButton = view.findViewById(R.id.deleteButton);
             addToCollectionButton = view.findViewById(R.id.addToCollectionButton);
             addClothesButton = view.findViewById(R.id.button_add_clothes);
+            sortButton = view.findViewById(R.id.sortButton);
+            clearFilterButton = view.findViewById(R.id.clearFilterButton);
 
             deleteButton.setOnClickListener(v -> deleteSelectedItems());
             addToCollectionButton.setOnClickListener(v -> showCollectionSelectionDialog());
-
             addClothesButton.setOnClickListener(v -> showAddClothesDialog());
+            sortButton.setOnClickListener(v -> showSortDialog());
+            clearFilterButton.setOnClickListener(v -> clearFilter());
 
-            updateButtonVisibility();
             loadClothingItems();
+            updateButtonVisibility();
 
         } catch (Exception e) {
             Log.e(TAG, "Error initializing ClothesFragment: " + e.getMessage(), e);
@@ -92,28 +101,35 @@ public class ClothesFragment extends Fragment {
         return view;
     }
 
+
     private void loadClothingItems() {
         try {
-            List<ClothingItem> clothingList = clothingManager.getAllClothingItems();
+            // Ensure filteredClothingList is initialized
+            if (filteredClothingList == null) {
+                filteredClothingList = new ArrayList<>();
+            }
 
             adapter = new ClothingAdapter(
-                    clothingList,
+                    filteredClothingList,
                     this::handleItemClick,
                     this::handleItemLongClick,
-                    isSelectionMode,
-                    false, // showRemoveFromCollectionButton is false for this context
-                    -1, // No specific collection
-                    clothingItemId -> {
-                        // No "Remove from Collection" functionality here
-                    }
+                    false,
+                    false,
+                    -1,
+                    null
             );
 
             recyclerView.setAdapter(adapter);
+            adapter.notifyDataSetChanged();
+            updateClearFilterButtonVisibility(Collections.emptySet()); // Reset filter visibility
+
         } catch (Exception e) {
             Log.e(TAG, "Error loading clothing items: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Error loading clothing items.", Toast.LENGTH_SHORT).show();
         }
     }
+
+
 
     private void handleItemClick(ClothingItem item) {
         if (isSelectionMode) {
@@ -125,9 +141,6 @@ public class ClothesFragment extends Fragment {
             }
         }
     }
-
-
-
 
     private void handleItemLongClick(ClothingItem item) {
         if (item == null) {
@@ -148,20 +161,22 @@ public class ClothesFragment extends Fragment {
             selectedItems.add(item);
         }
 
-        // Check if all items are deselected
         if (selectedItems.isEmpty() && isSelectionMode) {
             exitSelectionMode();
-            Log.d(TAG, "Exiting selection mode as no items are selected.");
         }
 
-        adapter.notifyDataSetChanged();
+        recyclerView.post(adapter::notifyDataSetChanged);
     }
-
 
     private void exitSelectionMode() {
         isSelectionMode = false;
         selectedItems.clear();
-        adapter.setSelectionMode(false);
+
+        recyclerView.post(() -> {
+            adapter.setSelectionMode(false);
+            adapter.notifyDataSetChanged();
+        });
+
         updateButtonVisibility();
     }
 
@@ -171,25 +186,43 @@ public class ClothesFragment extends Fragment {
             for (ClothingItem item : selectedItems) {
                 idsToDelete.add(item.getId());
             }
+
             clothingManager.deleteMultipleItems(idsToDelete);
             Toast.makeText(requireContext(), "Items deleted!", Toast.LENGTH_SHORT).show();
             exitSelectionMode();
-            loadClothingItems();
+
+            // Update clothing list and filtered list
+            clothingList = clothingManager.getAllClothingItems();
+            filteredClothingList = new ArrayList<>(clothingList);
+
+            // Update adapter and reset filter visibility
+            recyclerView.post(() -> {
+                adapter.updateData(filteredClothingList);
+                adapter.notifyDataSetChanged();
+                updateClearFilterButtonVisibility(Collections.emptySet()); // Reset filter visibility
+            });
+
         } catch (Exception e) {
             Log.e(TAG, "Error deleting selected items: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Error deleting items.", Toast.LENGTH_SHORT).show();
         }
     }
 
+
+    public void reloadData() {
+        clothingList = clothingManager.getAllClothingItems(); // Reload from DB
+        filteredClothingList = new ArrayList<>(clothingList); // Reset filtered list
+        updateAdapterSafely();
+    }
+
+
     private void showCollectionSelectionDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Add to Collection");
 
-        // Fetch all collections
         List<Collection> collections = new CollectionsManager(requireContext()).getAllCollections();
-
         String[] collectionNames = new String[collections.size()];
-        boolean[] checkedItems = new boolean[collections.size()]; // Initially, no collection is selected
+        boolean[] checkedItems = new boolean[collections.size()];
 
         for (int i = 0; i < collections.size(); i++) {
             collectionNames[i] = collections.get(i).getName();
@@ -197,18 +230,16 @@ public class ClothesFragment extends Fragment {
         }
 
         builder.setSingleChoiceItems(collectionNames, -1, (dialog, which) -> {
-            // Handle single collection selection
             for (int i = 0; i < checkedItems.length; i++) {
-                checkedItems[i] = (i == which); // Only one collection can be selected
+                checkedItems[i] = (i == which);
             }
         });
         builder.setPositiveButton("Add", (dialog, which) -> {
-            // Add selected clothes to the chosen collection
             int selectedCollectionId = -1;
             for (int i = 0; i < checkedItems.length; i++) {
                 if (checkedItems[i]) {
                     selectedCollectionId = collections.get(i).getId();
-                    break; // We only need one selected collection
+                    break;
                 }
             }
 
@@ -218,7 +249,7 @@ public class ClothesFragment extends Fragment {
                             .assignClothingToCollection(clothingItem.getId(), selectedCollectionId);
                 }
                 Toast.makeText(requireContext(), "Clothes added to collection!", Toast.LENGTH_SHORT).show();
-                exitSelectionMode(); // Exit selection mode after adding
+                exitSelectionMode();
             } else {
                 Toast.makeText(requireContext(), "Please select a collection.", Toast.LENGTH_SHORT).show();
             }
@@ -229,18 +260,120 @@ public class ClothesFragment extends Fragment {
     }
 
     private void showAddClothesDialog() {
-        try {
-            // Use the ImagePickerHelper to open the image picker
-            if (imagePickerHelper != null) {
-                imagePickerHelper.openImagePicker();
-            } else {
-                Log.e(TAG, "ImagePickerHelper is null. Cannot open image picker.");
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error showing Add Clothes dialog: " + e.getMessage(), e);
-            Toast.makeText(requireContext(), "Error adding clothing item.", Toast.LENGTH_SHORT).show();
+        if (imagePickerHelper != null) {
+            imagePickerHelper.openImagePicker();
+        } else {
+            Log.e(TAG, "ImagePickerHelper is null. Cannot open image picker.");
         }
     }
+
+    private void showSortDialog() {
+        try {
+            List<String> tags = clothingManager.getAllTags();
+            if (tags.isEmpty()) {
+                Toast.makeText(requireContext(), "No tags available for filtering.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String[] tagArray = tags.toArray(new String[0]);
+            boolean[] selectedTags = new boolean[tagArray.length];
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+            builder.setTitle("Filter by Tags")
+                    .setMultiChoiceItems(tagArray, selectedTags, (dialog, which, isChecked) -> selectedTags[which] = isChecked)
+                    .setPositiveButton("Apply", (dialog, which) -> applyFilter(tagArray, selectedTags))
+                    .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                    .show();
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error showing sort dialog: " + e.getMessage(), e);
+        }
+    }
+
+    private void applyFilter(String[] tags, boolean[] selectedTags) {
+        try {
+            Set<String> selectedTagSet = new HashSet<>();
+            for (int i = 0; i < tags.length; i++) {
+                if (selectedTags[i]) {
+                    selectedTagSet.add(tags[i].trim()); // Normalize and trim tags
+                }
+            }
+
+            if (selectedTagSet.isEmpty()) {
+                filteredClothingList = new ArrayList<>(clothingList); // No tags selected, show all items
+            } else {
+                filteredClothingList.clear();
+                for (ClothingItem item : clothingList) {
+                    if (item.getTags() != null) {
+                        Set<String> itemTags = new HashSet<>(Arrays.asList(item.getTags().split(",")));
+                        itemTags = normalizeTags(itemTags);
+
+                        // Check if there is any overlap with the selected tags
+                        if (!Collections.disjoint(itemTags, selectedTagSet)) {
+                            filteredClothingList.add(item);
+                        }
+                    }
+                }
+            }
+
+            adapter.updateData(filteredClothingList);
+            adapter.notifyDataSetChanged();
+
+            // Hide Add Clothes button while sorting
+            updateAddClothesButtonVisibility(false);
+            updateClearFilterButtonVisibility(selectedTagSet); // Pass the selected tags
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error applying filter: " + e.getMessage(), e);
+        }
+    }
+
+
+    private Set<String> normalizeTags(Set<String> tags) {
+        Set<String> normalizedTags = new HashSet<>();
+        for (String tag : tags) {
+            normalizedTags.add(tag.trim().toLowerCase()); // Trim and normalize
+        }
+        return normalizedTags;
+    }
+
+
+
+    private void clearFilter() {
+        try {
+            filteredClothingList = new ArrayList<>(clothingList); // Reset to the full list
+            adapter.updateData(filteredClothingList);
+            adapter.notifyDataSetChanged();
+            // Restore Add Clothes button visibility
+            updateAddClothesButtonVisibility(true);
+            updateClearFilterButtonVisibility(Collections.emptySet()); // No tags selected
+        } catch (Exception e) {
+            Log.e(TAG, "Error clearing filter: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Failed to clear filter.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    private void updateAddClothesButtonVisibility(boolean isVisible) {
+        addClothesButton.setVisibility(isVisible ? View.VISIBLE : View.GONE);
+    }
+
+
+    private void updateAdapterSafely() {
+        recyclerView.post(() -> {
+            adapter.updateData(filteredClothingList); // Update adapter with new data
+            adapter.notifyDataSetChanged(); // Notify adapter to refresh views
+        });
+    }
+
+    private void updateClearFilterButtonVisibility(Set<String> selectedTagSet) {
+        if (selectedTagSet != null && !selectedTagSet.isEmpty()) {
+            clearFilterButton.setVisibility(View.VISIBLE); // Show button if filtering is applied
+        } else {
+            clearFilterButton.setVisibility(View.GONE); // Hide button otherwise
+        }
+    }
+
 
     private void updateButtonVisibility() {
         if (isSelectionMode) {
@@ -254,4 +387,3 @@ public class ClothesFragment extends Fragment {
         }
     }
 }
-

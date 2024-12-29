@@ -11,18 +11,18 @@
         android:layout_height="120dp" />
 
     <TextView
-        android:id="@+id/titleTextView"
-        android:layout_width="match_parent"
+        android:id="@+id/textViewCollectionName"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Your Clothing Collection"
-        android:textSize="20sp"
-        android:gravity="center"
-        android:textStyle="bold"
-        android:padding="16dp"
-        android:textColor="?android:attr/textColorPrimary"
-        />
-
-
+        android:textSize="18sp"
+        android:textColor="?android:textColorPrimary"
+        android:layout_margin="16dp"
+        android:gravity="center_horizontal"
+        android:layout_gravity="top|center_horizontal" />
+    <!-- Space at the top -->
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="36dp" />
     <!-- RecyclerView for Clothing Grid -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
@@ -48,6 +48,8 @@
             android:text="Rename" />
 
         <!-- Add Clothes Button -->
+
+        <!-- Remove From Collection Button -->
         <Button
             android:id="@+id/button_add_clothes_to_collection"
             android:layout_width="0dp"
@@ -55,7 +57,6 @@
             android:layout_weight="1"
             android:text="Add Clothes" />
 
-        <!-- Remove From Collection Button -->
         <Button
             android:id="@+id/removeFromCollectionButton"
             android:layout_width="match_parent"
