@@ -164,7 +164,7 @@ public class ClothingDetailFragment extends Fragment {
         builder.show();
     }
 
-    private void navigateBack() {
+    void navigateBack() {
         if (getActivity() instanceof MainActivity) {
             MainActivity mainActivity = (MainActivity) getActivity();
             if ("CollectionDetailFragment".equals(originFragment)) {

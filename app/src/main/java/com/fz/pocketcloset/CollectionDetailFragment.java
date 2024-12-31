@@ -303,7 +303,7 @@ public class CollectionDetailFragment extends Fragment {
 
 
 
-    private void closeCollection() {
+    void closeCollection() {
         if (getActivity() instanceof MainActivity) {
             ((MainActivity) getActivity()).closeCollectionDetail();
         }
