@@ -35,12 +35,15 @@ public class CollectionsManager {
         List<Collection> collections = new ArrayList<>();
         try {
             SQLiteDatabase db = dbHelper.getReadableDatabase();
-            Cursor cursor = db.rawQuery("SELECT * FROM Collections", null);
+            Cursor cursor = db.rawQuery("SELECT id, name, emoji FROM Collections", null); // Include the emoji column
 
             while (cursor.moveToNext()) {
                 int id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
                 String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
-                collections.add(new Collection(id, name));
+                String emoji = cursor.getString(cursor.getColumnIndexOrThrow("emoji")); // Fetch the emoji
+                Collection collection = new Collection(id, name);
+                collection.setEmoji(emoji); // Set the emoji for the collection
+                collections.add(collection);
             }
             cursor.close();
             db.close();
@@ -49,6 +52,7 @@ public class CollectionsManager {
         }
         return collections;
     }
+
 
     public void assignClothingToCollection(int clothingId, int collectionId) {
         try {
@@ -75,24 +79,58 @@ public class CollectionsManager {
         }
     }
 
-    public void updateCollectionName(int id, String newName) {
+    public Collection getCollectionById(int collectionId) {
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+        Collection collection = null;
+
+        try {
+            db = dbHelper.getReadableDatabase();
+            String query = "SELECT id, name, emoji FROM Collections WHERE id = ?";
+            cursor = db.rawQuery(query, new String[]{String.valueOf(collectionId)});
+
+            if (cursor.moveToFirst()) {
+                int id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
+                String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
+                String emoji = cursor.getString(cursor.getColumnIndexOrThrow("emoji"));
+
+                collection = new Collection(id, name);
+                collection.setEmoji(emoji);
+            }
+        } catch (Exception e) {
+            Log.e("CollectionsManager", "Error fetching collection by ID: " + e.getMessage(), e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            if (db != null) {
+                db.close();
+            }
+        }
+
+        return collection;
+    }
+
+
+    public void updateCollectionEmoji(int collectionId, String newEmoji) {
         try {
             SQLiteDatabase db = dbHelper.getWritableDatabase();
             ContentValues values = new ContentValues();
-            values.put("name", newName);
+            values.put("emoji", newEmoji);
 
-            int rowsUpdated = db.update("Collections", values, "id = ?", new String[]{String.valueOf(id)});
+            int rowsUpdated = db.update("Collections", values, "id = ?", new String[]{String.valueOf(collectionId)});
             db.close();
 
             if (rowsUpdated > 0) {
-                Log.d(TAG, "Collection updated successfully: ID " + id);
+                Log.d("CollectionsManager", "Emoji updated successfully for Collection ID: " + collectionId);
             } else {
-                Log.d(TAG, "No collection found with ID: " + id);
+                Log.d("CollectionsManager", "No collection found with ID: " + collectionId);
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error updating collection: " + e.getMessage(), e);
+            Log.e("CollectionsManager", "Error updating emoji: " + e.getMessage(), e);
         }
     }
+
 
     public List<ClothingItem> getClothesInCollection(int collectionId) {
         List<ClothingItem> clothes = new ArrayList<>();
@@ -156,27 +194,32 @@ public class CollectionsManager {
     }
 
     public List<Collection> getCollectionsForClothing(int clothingId) {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
         List<Collection> collections = new ArrayList<>();
+        try {
+            SQLiteDatabase db = dbHelper.getReadableDatabase();
+            Cursor cursor = db.rawQuery(
+                    "SELECT c.id, c.name, c.emoji FROM Collections c " +
+                            "JOIN Clothing_Collection cc ON c.id = cc.collection_id " +
+                            "WHERE cc.clothing_id = ?",
+                    new String[]{String.valueOf(clothingId)}
+            );
 
-        String query = "SELECT c.id, c.name FROM Collections c " +
-                "INNER JOIN Clothes_Collections cc ON c.id = cc.collection_id " +
-                "WHERE cc.clothes_id = ?";
-        try (Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(clothingId)})) {
             while (cursor.moveToNext()) {
                 int id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
                 String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
-
-                collections.add(new Collection(id, name));
+                String emoji = cursor.getString(cursor.getColumnIndexOrThrow("emoji"));
+                Collection collection = new Collection(id, name);
+                collection.setEmoji(emoji); // Set emoji
+                collections.add(collection);
             }
-        } catch (Exception e) {
-            Log.e("CollectionsManager", "Error fetching collections for clothing: " + e.getMessage(), e);
-        } finally {
+            cursor.close();
             db.close();
+        } catch (Exception e) {
+            Log.e(TAG, "Error fetching collections for clothing: " + e.getMessage(), e);
         }
-
         return collections;
     }
+
 
 
 

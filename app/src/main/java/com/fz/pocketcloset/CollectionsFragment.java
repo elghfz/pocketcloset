@@ -25,7 +25,6 @@ public class CollectionsFragment extends Fragment {
     private static final String TAG = "CollectionsFragment";
     private RecyclerView recyclerView;
     private CollectionAdapter adapter;
-    private DatabaseHelper dbHelper;
 
     private Button addCollectionButton, deleteButton;
     private boolean isSelectionMode = false;
@@ -37,12 +36,12 @@ public class CollectionsFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_collections, container, false);
 
         try {
-            dbHelper = new DatabaseHelper(requireContext());
-            recyclerView = view.findViewById(R.id.recyclerView);
+            DatabaseHelper dbHelper = new DatabaseHelper(requireContext());
+            recyclerView = view.findViewById(R.id.collectionRecyclerView);
             recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-            addCollectionButton = view.findViewById(R.id.button_add_collection);
-            deleteButton = view.findViewById(R.id.button_delete);
+            addCollectionButton = view.findViewById(R.id.addCollectionButton);
+            deleteButton = view.findViewById(R.id.deleteButton);
 
             addCollectionButton.setOnClickListener(v -> showAddCollectionDialog());
             deleteButton.setOnClickListener(v -> deleteSelectedCollections());
@@ -61,13 +60,16 @@ public class CollectionsFragment extends Fragment {
 
     private void loadCollections() {
         try {
+            // Fetch the latest collections from the database
             List<Collection> collections = new CollectionsManager(requireContext()).getAllCollections();
 
+            // Update the adapter with the latest data
             adapter = new CollectionAdapter(
                     collections,
                     this::handleItemClick,
                     this::handleItemLongClick,
-                    isSelectionMode
+                    isSelectionMode,
+                    this::updateEmoji
             );
 
             recyclerView.setAdapter(adapter);
@@ -76,6 +78,35 @@ public class CollectionsFragment extends Fragment {
             Toast.makeText(requireContext(), "Error loading collections.", Toast.LENGTH_SHORT).show();
         }
     }
+
+    private void updateEmoji(Collection collection) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Update Emoji");
+
+        final EditText input = new EditText(requireContext());
+        input.setHint("Enter an emoji");
+        builder.setView(input);
+
+        builder.setPositiveButton("Update", (dialog, which) -> {
+            String newEmoji = input.getText().toString().trim();
+
+            if (isValidEmoji(newEmoji)) {
+                // Update the collection's emoji in the database
+                new CollectionsManager(requireContext()).updateCollectionEmoji(collection.getId(), newEmoji);
+
+                // Refresh the collections list
+                loadCollections(); // Refreshes the RecyclerView with the updated emoji
+
+                Toast.makeText(requireContext(), "Emoji updated successfully!", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(requireContext(), "Invalid emoji. Please try again.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.show();
+    }
+
 
     private void handleItemClick(Collection collection) {
         if (isSelectionMode) {
@@ -159,6 +190,21 @@ public class CollectionsFragment extends Fragment {
         builder.show();
     }
 
+
+    private boolean isValidEmoji(String input) {
+        if (input == null || input.isEmpty()) {
+            return false;
+        }
+
+        // Emoji typically consists of a single Unicode code point
+        int codePoint = input.codePointAt(0);
+        return input.length() == Character.charCount(codePoint) &&
+                Character.isSupplementaryCodePoint(codePoint);
+    }
+
+
+
+
     private void openCollection(Collection collection) {
         if (!isSelectionMode) {
             if (getActivity() instanceof MainActivity) {
@@ -166,7 +212,6 @@ public class CollectionsFragment extends Fragment {
             }
         }
     }
-
 
     private void updateButtonVisibility() {
         if (isSelectionMode) {

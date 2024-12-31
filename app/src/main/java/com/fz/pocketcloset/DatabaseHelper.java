@@ -8,7 +8,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     //Database info
     private static final String DATABASE_NAME = "ClosetApp.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     //Tables names
     private static final String TABLE_CLOTHES = "Clothes";
@@ -26,11 +26,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                    ");";
 
     // Collections Table Schema
-    private static final String CREATE_TABLE_COLLECTIONS =
-            "CREATE TABLE " + TABLE_COLLECTIONS + " (" +
-                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    "name TEXT NOT NULL" +
-                    ");";
+    private static final String CREATE_TABLE_COLLECTIONS = "CREATE TABLE Collections (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "name TEXT NOT NULL, " +
+            "emoji TEXT DEFAULT '📁'" + // Add the emoji column here
+            ");";
+
 
     // Outfits Table Schema
     private static final String CREATE_TABLE_OUTFITS =
@@ -83,4 +84,5 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_CLOTHES);
         onCreate(db);
     }
+
 }

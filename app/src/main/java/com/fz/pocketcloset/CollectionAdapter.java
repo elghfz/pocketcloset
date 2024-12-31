@@ -18,6 +18,7 @@ public class CollectionAdapter extends RecyclerView.Adapter<CollectionAdapter.Co
     private final List<Collection> collectionList;
     private final OnItemClickListener onItemClickListener;
     private final OnItemLongClickListener onItemLongClickListener;
+    private final EmojiClickListener emojiClickListener;
     private boolean selectionMode;
     private final Set<Collection> selectedItems = new HashSet<>();
 
@@ -29,16 +30,23 @@ public class CollectionAdapter extends RecyclerView.Adapter<CollectionAdapter.Co
         void onItemLongClick(Collection collection);
     }
 
+    public interface EmojiClickListener {
+        void onEmojiClicked(Collection collection);
+    }
+
+
     public CollectionAdapter(
             List<Collection> collectionList,
             OnItemClickListener onItemClickListener,
             OnItemLongClickListener onItemLongClickListener,
-            boolean selectionMode
+            boolean selectionMode,
+            EmojiClickListener emojiClickListener
     ) {
         this.collectionList = collectionList;
         this.onItemClickListener = onItemClickListener;
         this.onItemLongClickListener = onItemLongClickListener;
         this.selectionMode = selectionMode;
+        this.emojiClickListener = emojiClickListener;
     }
 
     public void setSelectionMode(boolean selectionMode) {
@@ -57,7 +65,15 @@ public class CollectionAdapter extends RecyclerView.Adapter<CollectionAdapter.Co
     public void onBindViewHolder(@NonNull CollectionViewHolder holder, int position) {
         Collection collection = collectionList.get(position);
 
-        holder.collectionNameTextView.setText(collection.getName());
+        holder.collectionName.setText(collection.getName());
+        holder.emojiView.setText(collection.getEmoji());
+
+        // Trigger the callback for emoji click
+        holder.emojiView.setOnClickListener(v -> {
+            if (emojiClickListener != null) {
+                emojiClickListener.onEmojiClicked(collection);
+            }
+        });
 
         holder.itemView.setOnClickListener(v -> {
             if (!selectionMode) {
@@ -109,13 +125,15 @@ public class CollectionAdapter extends RecyclerView.Adapter<CollectionAdapter.Co
     }
 
     static class CollectionViewHolder extends RecyclerView.ViewHolder {
-        TextView collectionNameTextView;
+        TextView collectionName;
         CheckBox selectCheckbox;
+        TextView emojiView;
 
         public CollectionViewHolder(@NonNull View itemView) {
             super(itemView);
-            collectionNameTextView = itemView.findViewById(R.id.textViewCollectionName);
-            selectCheckbox = itemView.findViewById(R.id.checkbox);
+            collectionName = itemView.findViewById(R.id.collectionName);
+            selectCheckbox = itemView.findViewById(R.id.collectionCheckbox);
+            emojiView = itemView.findViewById(R.id.emojiView);
         }
     }
 }

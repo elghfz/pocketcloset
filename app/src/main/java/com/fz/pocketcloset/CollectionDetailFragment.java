@@ -27,41 +27,51 @@ public class CollectionDetailFragment extends Fragment {
 
     private static final String TAG = "CollectionDetailFragment";
     private TextView collectionNameTextView;
+    private TextView emojiTextView;
     private RecyclerView recyclerView;
     private ClothingAdapter adapter;
     private DatabaseHelper dbHelper;
     private int collectionId;
     private String collectionName;
+    private String collectionEmoji;
     private Button renameButton, addClothesButton, removeFromCollectionButton, closeButton;
+
     private boolean isSelectionMode = false;
     private final Set<ClothingItem> selectedItems = new HashSet<>();
 
-    @Nullable
+    private void loadCollectionDetails() {
+        try {
+            // Fetch the latest collection details from the database
+            Collection collection = new CollectionsManager(requireContext()).getCollectionById(collectionId);
+
+            if (collection != null) {
+                collectionName = collection.getName();
+                collectionEmoji = collection.getEmoji();
+
+                collectionNameTextView.setText(collectionName);
+                emojiTextView.setText(collectionEmoji);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading collection details: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Error loading collection details.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_collection_detail, container, false);
 
         try {
-            // Get collection details from arguments
             collectionId = requireArguments().getInt("collection_id", -1);
-            collectionName = requireArguments().getString("collection_name", "Default Collection");
 
             dbHelper = new DatabaseHelper(requireContext());
 
             // Initialize UI elements
             recyclerView = view.findViewById(R.id.recyclerView);
-            recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 2)); // Grid view with 2 columns
+            recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 2));
 
             collectionNameTextView = view.findViewById(R.id.textViewCollectionName);
-
-            // Get the collection name from arguments
-            Bundle args = getArguments();
-            if (args != null) {
-                String collectionName = args.getString("collection_name", "Default Collection");
-                collectionNameTextView.setText(collectionName);
-            } else {
-                collectionNameTextView.setText("Default Collection");
-            }
+            emojiTextView = view.findViewById(R.id.emojiView);
 
             renameButton = view.findViewById(R.id.button_rename_collection);
             addClothesButton = view.findViewById(R.id.button_add_clothes_to_collection);
@@ -72,10 +82,13 @@ public class CollectionDetailFragment extends Fragment {
             addClothesButton.setOnClickListener(v -> showAddClothesDialog());
             removeFromCollectionButton.setOnClickListener(v -> removeSelectedFromCollection());
             closeButton.setOnClickListener(v -> closeCollection());
+            emojiTextView.setOnClickListener(v -> updateEmoji());
 
-            updateButtonVisibility();
+            // Load the latest collection details
+            loadCollectionDetails();
             loadClothesInCollection();
 
+            updateButtonVisibility();
         } catch (Exception e) {
             Log.e(TAG, "Error initializing CollectionDetailFragment: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Error loading collection details.", Toast.LENGTH_SHORT).show();
@@ -106,18 +119,6 @@ public class CollectionDetailFragment extends Fragment {
         }
     }
 
-    public void refreshClothingList() {
-        try {
-            // Reload clothing items in this collection
-            List<ClothingItem> clothesInCollection = new CollectionsManager(requireContext())
-                    .getClothesInCollection(collectionId);
-
-            adapter.updateData(clothesInCollection); // Update adapter with refreshed data
-        } catch (Exception e) {
-            Log.e(TAG, "Error refreshing clothing list in collection: " + e.getMessage(), e);
-            Toast.makeText(requireContext(), "Error refreshing collection data.", Toast.LENGTH_SHORT).show();
-        }
-    }
 
 
     private void handleItemClick(ClothingItem item) {
@@ -209,22 +210,28 @@ public class CollectionDetailFragment extends Fragment {
 
     private void renameCollection(String newName) {
         try {
+            // Update the collection name in the database
             SQLiteDatabase db = dbHelper.getWritableDatabase();
             ContentValues values = new ContentValues();
             values.put("name", newName);
-            db.update("Collections", values, "id = ?", new String[]{String.valueOf(collectionId)});
+            int rowsAffected = db.update("Collections", values, "id = ?", new String[]{String.valueOf(collectionId)});
             db.close();
 
-            collectionName = newName;
-            TextView titleTextView = getView().findViewById(R.id.titleTextView);
-            titleTextView.setText(newName);
+            if (rowsAffected > 0) {
+                // Update the local collection name and UI
+                collectionName = newName;
+                collectionNameTextView.setText(newName);
 
-            Toast.makeText(requireContext(), "Collection renamed!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "Collection renamed successfully!", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(requireContext(), "Failed to rename collection.", Toast.LENGTH_SHORT).show();
+            }
         } catch (Exception e) {
             Log.e(TAG, "Error renaming collection: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Error renaming collection.", Toast.LENGTH_SHORT).show();
         }
     }
+
 
     private void showAddClothesDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
@@ -259,6 +266,42 @@ public class CollectionDetailFragment extends Fragment {
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
         builder.show();
     }
+
+    private void updateEmoji() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Pick an Emoji");
+
+        final EditText input = new EditText(requireContext());
+        input.setHint("Enter an emoji");
+        builder.setView(input);
+
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            String emoji = input.getText().toString().trim();
+            if (isEmoji(emoji)) {
+                // Update the emoji in the database
+                new CollectionsManager(requireContext()).updateCollectionEmoji(collectionId, emoji);
+
+                // Reload the collection details to reflect the updated emoji
+                loadCollectionDetails();
+
+                Toast.makeText(requireContext(), "Emoji updated!", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(requireContext(), "Invalid emoji. Please try again.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.show();
+    }
+    private boolean isEmoji(String input) {
+        if (input == null || input.isEmpty()) {
+            return false;
+        }
+        int codePoint = input.codePointAt(0);
+        return Character.isSupplementaryCodePoint(codePoint);
+    }
+
+
 
     private void closeCollection() {
         if (getActivity() instanceof MainActivity) {

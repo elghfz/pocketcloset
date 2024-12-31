@@ -10,6 +10,17 @@
         android:layout_width="match_parent"
         android:layout_height="120dp" />
 
+    <!-- Emoji Button -->
+    <TextView
+        android:id="@+id/emojiView"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:textSize="24sp"
+        android:gravity="center"
+        android:layout_marginEnd="16dp"
+        android:text="📁"
+        android:clickable="true"
+        android:focusable="true" />
     <TextView
         android:id="@+id/textViewCollectionName"
         android:layout_width="wrap_content"
