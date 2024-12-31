@@ -127,10 +127,11 @@ public class CollectionDetailFragment extends Fragment {
         } else {
             if (getActivity() instanceof MainActivity) {
                 MainActivity mainActivity = (MainActivity) getActivity();
-                mainActivity.openClothingDetail(item.getId());
+                mainActivity.openClothingDetail(item.getId(), "CollectionDetailFragment"); // Pass "CollectionDetailFragment" as origin
             }
         }
     }
+
 
     private void handleItemLongClick(ClothingItem item) {
         if (item == null) {

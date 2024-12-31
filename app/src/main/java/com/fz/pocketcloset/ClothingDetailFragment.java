@@ -167,13 +167,16 @@ public class ClothingDetailFragment extends Fragment {
     void navigateBack() {
         if (getActivity() instanceof MainActivity) {
             MainActivity mainActivity = (MainActivity) getActivity();
+            String originFragment = getArguments().getString("origin", "ClothesFragment");
+
             if ("CollectionDetailFragment".equals(originFragment)) {
-                mainActivity.navigateBackToCollectionDetail(); // Navigate back to CollectionDetailFragment
+                mainActivity.navigateBackToCollectionDetail();
             } else {
-                mainActivity.navigateBackToClothesFragment(); // Navigate back to ClothesFragment
+                mainActivity.navigateBackToClothesFragment();
             }
         }
     }
+
 
     private void deleteClothing() {
         try {

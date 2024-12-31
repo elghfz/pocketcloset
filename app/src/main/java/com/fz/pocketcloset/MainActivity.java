@@ -1,6 +1,9 @@
 package com.fz.pocketcloset;
 
 import android.os.Bundle;
+import android.util.Log;
+
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -13,7 +16,8 @@ public class MainActivity extends AppCompatActivity {
     private Fragment clothesFragment;
     private Fragment collectionsFragment;
     private Fragment activeFragment; // Tracks the currently active fragment
-    private Fragment openDetailFragment; // Tracks the currently open detail fragment
+    private Fragment currentCollectionDetailFragment; // Tracks the active CollectionDetailFragment
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,21 +83,36 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void openCollectionDetail(int collectionId, String collectionName) {
-        CollectionDetailFragment collectionDetailFragment = new CollectionDetailFragment();
-        Bundle args = new Bundle();
-        args.putInt("collection_id", collectionId);
-        args.putString("collection_name", collectionName);
-        collectionDetailFragment.setArguments(args);
-
         FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction()
-                .hide(activeFragment)
-                .add(R.id.fragment_container, collectionDetailFragment, "CollectionDetailFragment")
-                .addToBackStack(null)
-                .commit();
+
+        CollectionDetailFragment collectionDetailFragment = (CollectionDetailFragment)
+                fragmentManager.findFragmentByTag("CollectionDetailFragment_" + collectionId);
+
+        if (collectionDetailFragment == null) {
+            collectionDetailFragment = new CollectionDetailFragment();
+            Bundle args = new Bundle();
+            args.putInt("collection_id", collectionId);
+            args.putString("collection_name", collectionName);
+            collectionDetailFragment.setArguments(args);
+
+            fragmentManager.beginTransaction()
+                    .hide(activeFragment)
+                    .add(R.id.fragment_container, collectionDetailFragment, "CollectionDetailFragment_" + collectionId)
+                    .addToBackStack(null)
+                    .commit();
+        } else {
+            fragmentManager.beginTransaction()
+                    .hide(activeFragment)
+                    .show(collectionDetailFragment)
+                    .addToBackStack(null)
+                    .commit();
+        }
 
         activeFragment = collectionDetailFragment;
+        currentCollectionDetailFragment = collectionDetailFragment; // Track the active CollectionDetailFragment
     }
+
+
 
 
     public void closeCollectionDetail() {
@@ -109,21 +128,35 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void openClothingDetail(int clothingId) {
-        ClothingDetailFragment clothingDetailFragment = new ClothingDetailFragment();
-        Bundle args = new Bundle();
-        args.putInt("clothing_id", clothingId);
-        clothingDetailFragment.setArguments(args);
-
+    public void openClothingDetail(int clothingId, @Nullable String originTag) {
         FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction()
-                .hide(activeFragment)
-                .add(R.id.fragment_container, clothingDetailFragment, "ClothingDetailFragment")
-                .addToBackStack(null)
-                .commit();
+
+        ClothingDetailFragment clothingDetailFragment = (ClothingDetailFragment)
+                fragmentManager.findFragmentByTag("ClothingDetailFragment");
+
+        if (clothingDetailFragment == null) {
+            clothingDetailFragment = new ClothingDetailFragment();
+            Bundle args = new Bundle();
+            args.putInt("clothing_id", clothingId);
+            args.putString("origin", originTag); // Pass the origin fragment's tag
+            clothingDetailFragment.setArguments(args);
+
+            fragmentManager.beginTransaction()
+                    .hide(activeFragment)
+                    .add(R.id.fragment_container, clothingDetailFragment, "ClothingDetailFragment")
+                    .addToBackStack(null)
+                    .commit();
+        } else {
+            fragmentManager.beginTransaction()
+                    .hide(activeFragment)
+                    .show(clothingDetailFragment)
+                    .addToBackStack(null)
+                    .commit();
+        }
 
         activeFragment = clothingDetailFragment;
     }
+
     public void navigateBackToClothesFragment() {
         FragmentManager fragmentManager = getSupportFragmentManager();
 
@@ -138,17 +171,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void navigateBackToCollectionDetail() {
-        FragmentManager fragmentManager = getSupportFragmentManager();
+        if (currentCollectionDetailFragment != null) {
+            FragmentManager fragmentManager = getSupportFragmentManager();
 
-        // Remove the current active fragment and return to CollectionDetailFragment
-        fragmentManager.popBackStack(); // Pop the ClothingDetailFragment from back stack
-        fragmentManager.beginTransaction()
-                .hide(activeFragment)
-                .show(collectionsFragment) // Ensure CollectionsFragment is shown first
-                .commit();
+            fragmentManager.popBackStack(); // Remove the ClothingDetailFragment from the back stack
+            fragmentManager.beginTransaction()
+                    .hide(activeFragment)
+                    .show(currentCollectionDetailFragment)
+                    .commit();
 
-        activeFragment = collectionsFragment;
+            activeFragment = currentCollectionDetailFragment;
+        } else {
+            Log.e("MainActivity", "No CollectionDetailFragment is currently active!");
+        }
     }
+
+
 
 
     public void refreshClothingList() {
