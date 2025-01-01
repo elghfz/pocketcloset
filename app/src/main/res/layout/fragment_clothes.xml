@@ -24,37 +24,44 @@
         android:textSize="24sp"
         android:textStyle="bold"
         android:lineSpacingExtra="4dp"
-        android:textColor="?android:attr/textColorPrimary"
-        />
+        android:textColor="?android:attr/textColorPrimary" />
 
     <!-- Space between the title and grid view -->
     <Space
         android:layout_width="match_parent"
         android:layout_height="26dp" />
+
+    <!-- Filter and Clear Filter Buttons -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="8dp"
+        android:gravity="end"
         android:layout_marginBottom="8dp">
 
-        <!-- Sort Button -->
-        <Button
-            android:id="@+id/sortButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Sort by Tags" />
+        <!-- Filter Button -->
+        <ImageButton
+            android:id="@+id/filterButton"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/circular_button"
+            android:scaleType="centerInside"
+            android:src="@drawable/filter_icon"
+            android:contentDescription="Sort by Tags" />
 
         <!-- Clear Filter Button -->
-        <Button
+        <ImageButton
             android:id="@+id/clearFilterButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Clear"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:background="@drawable/circular_button"
+            android:scaleType="centerInside"
+            android:src="@drawable/clear_filter_icon"
+            android:contentDescription="Clear"
             android:visibility="gone" /> <!-- Initially hidden -->
     </LinearLayout>
+
     <!-- Space between the title and grid view -->
     <Space
         android:layout_width="match_parent"
@@ -73,37 +80,46 @@
         android:layout_width="match_parent"
         android:layout_height="36dp" />
 
-    <!-- Buttons -->
+    <!-- Bottom Buttons -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:gravity="end"
         android:paddingTop="8dp">
 
         <!-- Add Clothes Button -->
-        <Button
+        <ImageButton
             android:id="@+id/button_add_clothes"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Add Clothes" />
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:background="@drawable/circular_button"
+            android:scaleType="centerInside"
+            android:src="@drawable/add_icon"
+            android:contentDescription="Add Clothes"
+            android:layout_marginEnd="8dp" />
 
         <!-- Add to Collection Button -->
-        <Button
+        <ImageButton
             android:id="@+id/addToCollectionButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Add to Collection"
-            android:visibility="gone"/>
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:background="@drawable/circular_button"
+            android:scaleType="centerInside"
+            android:src="@drawable/add_to_collection_icon"
+            android:contentDescription="Add to Collection"
+            android:layout_marginEnd="8dp"
+            android:visibility="gone" />
 
         <!-- Delete Button -->
-        <Button
+        <ImageButton
             android:id="@+id/deleteButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Delete"
-            android:visibility="gone"/>
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:background="@drawable/circular_button"
+            android:scaleType="centerInside"
+            android:src="@drawable/delete_icon"
+            android:contentDescription="Delete Clothing"
+            android:visibility="gone" />
     </LinearLayout>
 </LinearLayout>

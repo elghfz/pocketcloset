@@ -35,19 +35,34 @@
         android:layout_weight="1"
         android:scrollbars="vertical" />
 
-    <!-- Add Collection Button -->
-    <Button
-        android:id="@+id/addCollectionButton"
+    <!-- Action Buttons -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Add Collection" />
-    <Button
-        android:id="@+id/deleteButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:layout_margin="8dp"
-        android:text="Delete"
-        android:visibility="gone" />
+        android:orientation="horizontal"
+        android:gravity="end"
+        android:paddingTop="8dp">
 
+        <!-- Add Collection Button -->
+        <ImageButton
+            android:id="@+id/addCollectionButton"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:background="@drawable/circular_button"
+            android:scaleType="centerInside"
+            android:src="@drawable/add_icon"
+            android:contentDescription="Add Collection"
+            android:layout_marginEnd="8dp" />
+
+        <!-- Delete Button -->
+        <ImageButton
+            android:id="@+id/deleteButton"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:background="@drawable/circular_button"
+            android:scaleType="centerInside"
+            android:src="@drawable/delete_icon"
+            android:contentDescription="Delete Collection"
+            android:visibility="gone" />
+    </LinearLayout>
 </LinearLayout>

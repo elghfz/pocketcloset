@@ -7,7 +7,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -52,16 +52,16 @@ public class ClothingDetailFragment extends Fragment {
             loadClothingDetails();
 
             // Set button click listeners
-            Button saveButton = view.findViewById(R.id.button_save);
+            ImageButton saveButton = view.findViewById(R.id.button_save);
             saveButton.setOnClickListener(v -> navigateBack());
 
-            Button editButton = view.findViewById(R.id.button_edit_clothing);
+            ImageButton editButton = view.findViewById(R.id.button_edit_clothing);
             editButton.setOnClickListener(v -> showEditTagsDialog());
 
-            Button addToCollectionButton = view.findViewById(R.id.button_add_to_collection);
+            ImageButton addToCollectionButton = view.findViewById(R.id.button_add_to_collection);
             addToCollectionButton.setOnClickListener(v -> showAddToCollectionDialog());
 
-            Button deleteButton = view.findViewById(R.id.button_delete_clothing);
+            ImageButton deleteButton = view.findViewById(R.id.button_delete_clothing);
             deleteButton.setOnClickListener(v -> deleteClothing());
 
         } catch (Exception e) {
@@ -110,8 +110,6 @@ public class ClothingDetailFragment extends Fragment {
             Log.e(TAG, "Error loading clothing details: " + e.getMessage(), e);
         }
     }
-
-
 
     private void showEditTagsDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());

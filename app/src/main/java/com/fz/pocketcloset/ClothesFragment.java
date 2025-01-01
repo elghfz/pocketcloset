@@ -1,5 +1,6 @@
 package com.fz.pocketcloset;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -8,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -32,10 +34,10 @@ public class ClothesFragment extends Fragment {
     private Parcelable recyclerViewState;
     private boolean isSelectionMode = false;
     private final Set<ClothingItem> selectedItems = new HashSet<>();
-    private Button deleteButton, addToCollectionButton, addClothesButton;
+    private ImageButton deleteButton, addToCollectionButton, addClothesButton;
     private ImagePickerHelper imagePickerHelper;
     private DatabaseHelper dbHelper;
-    private Button sortButton, clearFilterButton;
+    private ImageButton filterButton, clearFilterButton;
     private List<ClothingItem> clothingList; // Original, unfiltered list
     private List<ClothingItem> filteredClothingList; // Filtered list
 
@@ -56,6 +58,7 @@ public class ClothesFragment extends Fragment {
         }
     }
 
+    @SuppressLint("WrongViewCast")
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -81,13 +84,13 @@ public class ClothesFragment extends Fragment {
             deleteButton = view.findViewById(R.id.deleteButton);
             addToCollectionButton = view.findViewById(R.id.addToCollectionButton);
             addClothesButton = view.findViewById(R.id.button_add_clothes);
-            sortButton = view.findViewById(R.id.sortButton);
+            filterButton = view.findViewById(R.id.filterButton);
             clearFilterButton = view.findViewById(R.id.clearFilterButton);
 
             deleteButton.setOnClickListener(v -> deleteSelectedItems());
             addToCollectionButton.setOnClickListener(v -> showCollectionSelectionDialog());
             addClothesButton.setOnClickListener(v -> showAddClothesDialog());
-            sortButton.setOnClickListener(v -> showSortDialog());
+            filterButton.setOnClickListener(v -> showFilterDialog());
             clearFilterButton.setOnClickListener(v -> clearFilter());
 
             loadClothingItems();
@@ -268,7 +271,7 @@ public class ClothesFragment extends Fragment {
         }
     }
 
-    private void showSortDialog() {
+    private void showFilterDialog() {
         try {
             List<String> tags = clothingManager.getAllTags();
             if (tags.isEmpty()) {
@@ -287,7 +290,7 @@ public class ClothesFragment extends Fragment {
                     .show();
 
         } catch (Exception e) {
-            Log.e(TAG, "Error showing sort dialog: " + e.getMessage(), e);
+            Log.e(TAG, "Error showing filter dialog: " + e.getMessage(), e);
         }
     }
 
@@ -320,7 +323,7 @@ public class ClothesFragment extends Fragment {
             adapter.updateData(filteredClothingList);
             adapter.notifyDataSetChanged();
 
-            // Hide Add Clothes button while sorting
+            // Hide Add Clothes button while filtering
             updateAddClothesButtonVisibility(false);
             updateClearFilterButtonVisibility(selectedTagSet); // Pass the selected tags
 

@@ -1,7 +1,24 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Base.Theme.PocketCloset" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+    <style name="Base.Theme.PocketCloset" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:forceDarkAllowed" tools:ignore="NewApi">false</item> <!-- Disable system-enforced dark mode -->
+        <item name="android:windowBackground">#433c3c</item>
+        <item name="colorSurface">#433c3c</item>
+        <item name="colorPrimary">#ce3131</item>
+        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
     </style>
+
+    <style name="BottomNavigationStyle" parent="Widget.Material3.BottomNavigationView">
+        <!-- Background color for the navigation pane -->
+        <item name="backgroundTint">#433c3c</item>
+        <!-- Remove elevation/shadow -->
+        <item name="elevation">0dp</item>
+        <!-- Optional: remove ripple effect -->
+        <item name="itemRippleColor">@android:color/transparent</item>
+        <item name="colorControlHighlight">@android:color/transparent</item>
+    </style>
+
+    <style name="Theme.PocketCloset" parent="Base.Theme.PocketCloset" />
 </resources>

@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,7 +35,7 @@ public class CollectionDetailFragment extends Fragment {
     private int collectionId;
     private String collectionName;
     private String collectionEmoji;
-    private Button renameButton, addClothesButton, removeFromCollectionButton, closeButton;
+    private ImageButton renameButton, addClothesButton, removeFromCollectionButton, closeButton;
 
     private boolean isSelectionMode = false;
     private final Set<ClothingItem> selectedItems = new HashSet<>();
@@ -75,7 +76,7 @@ public class CollectionDetailFragment extends Fragment {
 
             renameButton = view.findViewById(R.id.button_rename_collection);
             addClothesButton = view.findViewById(R.id.button_add_clothes_to_collection);
-            removeFromCollectionButton = view.findViewById(R.id.removeFromCollectionButton);
+            removeFromCollectionButton = view.findViewById(R.id.button_remove_from_collection);
             closeButton = view.findViewById(R.id.button_close_collection);
 
             renameButton.setOnClickListener(v -> showRenameDialog());
