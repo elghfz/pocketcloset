@@ -46,6 +46,8 @@ public class ClothingDetailFragment extends Fragment {
             collectionsRecyclerView = view.findViewById(R.id.collectionsRecyclerView);
             collectionsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
+
+
             // Load clothing details
             loadClothingDetails();
 
@@ -81,7 +83,13 @@ public class ClothingDetailFragment extends Fragment {
                 tagsTextView.setText(clothing.getTags());
 
                 // Load collections it belongs to
-                List<Collection> collections = new CollectionsManager(requireContext()).getCollectionsForClothing(clothingId); // Ensure this fetches emojis too
+                List<Collection> collections = new CollectionsManager(requireContext()).getCollectionsForClothing(clothingId);
+
+                // Debug: Log the collections
+                for (Collection collection : collections) {
+                    Log.d(TAG, "Collection: " + collection.getName() + " (" + collection.getEmoji() + ")");
+                }
+
                 CollectionAdapter adapter = new CollectionAdapter(
                         collections,
                         collection -> {
@@ -95,11 +103,14 @@ public class ClothingDetailFragment extends Fragment {
                         null // No emoji update here
                 );
                 collectionsRecyclerView.setAdapter(adapter);
+                Log.d(TAG, "Adapter set with item count: " + collections.size());
+
             }
         } catch (Exception e) {
             Log.e(TAG, "Error loading clothing details: " + e.getMessage(), e);
         }
     }
+
 
 
     private void showEditTagsDialog() {

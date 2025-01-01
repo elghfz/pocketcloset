@@ -12,6 +12,12 @@ public class Collection {
         this.emoji = "📁";
     }
 
+    public Collection(int id, String name, String emoji) {
+        this.id = id;
+        this.name = name;
+        this.emoji = emoji;
+    }
+
     public int getId() {
         return id;
     }

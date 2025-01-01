@@ -197,20 +197,18 @@ public class CollectionsManager {
         List<Collection> collections = new ArrayList<>();
         try {
             SQLiteDatabase db = dbHelper.getReadableDatabase();
-            Cursor cursor = db.rawQuery(
-                    "SELECT c.id, c.name, c.emoji FROM Collections c " +
-                            "JOIN Clothing_Collection cc ON c.id = cc.collection_id " +
-                            "WHERE cc.clothing_id = ?",
-                    new String[]{String.valueOf(clothingId)}
-            );
+            String query = "SELECT c.id, c.name, c.emoji " +
+                    "FROM Collections c " +
+                    "INNER JOIN Clothes_Collections cc " +
+                    "ON c.id = cc.collection_id " +
+                    "WHERE cc.clothes_id = ?";
+            Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(clothingId)});
 
             while (cursor.moveToNext()) {
                 int id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
                 String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
                 String emoji = cursor.getString(cursor.getColumnIndexOrThrow("emoji"));
-                Collection collection = new Collection(id, name);
-                collection.setEmoji(emoji); // Set emoji
-                collections.add(collection);
+                collections.add(new Collection(id, name, emoji));
             }
             cursor.close();
             db.close();
@@ -219,6 +217,8 @@ public class CollectionsManager {
         }
         return collections;
     }
+
+
 
 
 

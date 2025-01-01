@@ -1,5 +1,8 @@
 package com.fz.pocketcloset;
 
+import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
+
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -64,6 +67,7 @@ public class CollectionAdapter extends RecyclerView.Adapter<CollectionAdapter.Co
     @Override
     public void onBindViewHolder(@NonNull CollectionViewHolder holder, int position) {
         Collection collection = collectionList.get(position);
+        Log.d(TAG, "Binding collection: " + collection.getName() + " (" + collection.getEmoji() + ")");
 
         holder.collectionName.setText(collection.getName());
         holder.emojiView.setText(collection.getEmoji());
