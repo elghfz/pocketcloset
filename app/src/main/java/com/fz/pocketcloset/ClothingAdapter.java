@@ -1,6 +1,9 @@
 package com.fz.pocketcloset;
 
+import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
+
 import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -107,13 +110,12 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
         });
     }
 
-
-    public void updateData(List<ClothingItem> newClothingList) {
-        this.clothingList = new ArrayList<>(newClothingList); // Replace the current list
+    public void updateData(List<ClothingItem> newData) {
+        Log.d(TAG, "Updating adapter data. New item count: " + newData.size());
+        this.clothingList.clear();
+        this.clothingList.addAll(newData);
+        notifyDataSetChanged();
     }
-
-
-
 
 
     @Override
@@ -124,7 +126,6 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
 
     public void setSelectionMode(boolean selectionMode) {
         this.selectionMode = selectionMode;
-        // Do not notify changes here; leave it to the Fragment to manage
     }
 
 

@@ -1,5 +1,7 @@
 package com.fz.pocketcloset;
 
+import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
+
 import android.os.Bundle;
 import android.util.Log;
 
@@ -15,6 +17,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Fragment clothesFragment;
     private Fragment collectionsFragment;
+    private Fragment outfitsFragment;
     private Fragment activeFragment; // Tracks the currently active fragment
     private Fragment currentCollectionDetailFragment; // Tracks the active CollectionDetailFragment
 
@@ -31,9 +34,19 @@ public class MainActivity extends AppCompatActivity {
             clothesFragment = new ClothesFragment();
             fragmentManager.beginTransaction()
                     .add(R.id.fragment_container, clothesFragment, "ClothesFragment")
+                    .hide(clothesFragment)
                     .commit();
         } else {
             clothesFragment = fragmentManager.findFragmentByTag("ClothesFragment");
+        }
+
+        if (fragmentManager.findFragmentByTag("OutfitsFragment") == null) {
+            outfitsFragment = new OutfitsFragment();
+            fragmentManager.beginTransaction()
+                    .add(R.id.fragment_container, outfitsFragment, "OutfitsFragment")
+                    .commit();
+        } else {
+            outfitsFragment = fragmentManager.findFragmentByTag("OutfitsFragment");
         }
 
         if (fragmentManager.findFragmentByTag("CollectionsFragment") == null) {
@@ -46,20 +59,26 @@ public class MainActivity extends AppCompatActivity {
             collectionsFragment = fragmentManager.findFragmentByTag("CollectionsFragment");
         }
 
-        activeFragment = clothesFragment; // Start with ClothesFragment as the active fragment
+        activeFragment = outfitsFragment; // Start with OutfitsFragment as the active fragment
 
+        // Setup navigation
         BottomNavigationView bottomNavigation = findViewById(R.id.bottom_navigation);
+
+        // Set the default selected item to Outfits
+        bottomNavigation.setSelectedItemId(R.id.nav_outfits);
+
         bottomNavigation.setOnItemSelectedListener(item -> {
             if (item.getItemId() == R.id.nav_clothes) {
                 switchToFragment(clothesFragment);
+            } else if (item.getItemId() == R.id.nav_outfits) {
+                switchToFragment(outfitsFragment);
             } else if (item.getItemId() == R.id.nav_collections) {
                 switchToFragment(collectionsFragment);
             }
             return true;
         });
-
-
     }
+
 
     private void switchToFragment(Fragment targetFragment) {
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -80,13 +99,11 @@ public class MainActivity extends AppCompatActivity {
         activeFragment = targetFragment;
     }
 
-
-
     public void openCollectionDetail(int collectionId, String collectionName) {
         FragmentManager fragmentManager = getSupportFragmentManager();
 
-        CollectionDetailFragment collectionDetailFragment = (CollectionDetailFragment)
-                fragmentManager.findFragmentByTag("CollectionDetailFragment_" + collectionId);
+        String fragmentTag = "CollectionDetailFragment_" + collectionId;
+        CollectionDetailFragment collectionDetailFragment = (CollectionDetailFragment) fragmentManager.findFragmentByTag(fragmentTag);
 
         if (collectionDetailFragment == null) {
             collectionDetailFragment = new CollectionDetailFragment();
@@ -97,21 +114,19 @@ public class MainActivity extends AppCompatActivity {
 
             fragmentManager.beginTransaction()
                     .hide(activeFragment)
-                    .add(R.id.fragment_container, collectionDetailFragment, "CollectionDetailFragment_" + collectionId)
+                    .add(R.id.fragment_container, collectionDetailFragment, fragmentTag)
                     .addToBackStack(null)
                     .commit();
         } else {
             fragmentManager.beginTransaction()
                     .hide(activeFragment)
                     .show(collectionDetailFragment)
-                    .addToBackStack(null)
                     .commit();
         }
 
         activeFragment = collectionDetailFragment;
-        currentCollectionDetailFragment = collectionDetailFragment; // Track the active CollectionDetailFragment
+        currentCollectionDetailFragment = collectionDetailFragment;
     }
-
 
 
 
@@ -128,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void openClothingDetail(int clothingId, @Nullable String originTag) {
+    public void openClothingDetail(int clothingId, @Nullable String originTag, int collectionId, @Nullable String collectionName) {
         FragmentManager fragmentManager = getSupportFragmentManager();
 
         ClothingDetailFragment clothingDetailFragment = (ClothingDetailFragment)
@@ -138,7 +153,9 @@ public class MainActivity extends AppCompatActivity {
             clothingDetailFragment = new ClothingDetailFragment();
             Bundle args = new Bundle();
             args.putInt("clothing_id", clothingId);
-            args.putString("origin", originTag); // Pass the origin fragment's tag
+            args.putString("origin", originTag);
+            args.putInt("collection_id", collectionId);
+            args.putString("collection_name", collectionName);
             clothingDetailFragment.setArguments(args);
 
             fragmentManager.beginTransaction()
@@ -157,6 +174,8 @@ public class MainActivity extends AppCompatActivity {
         activeFragment = clothingDetailFragment;
     }
 
+
+
     public void navigateBackToClothesFragment() {
         FragmentManager fragmentManager = getSupportFragmentManager();
 
@@ -171,6 +190,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void navigateBackToCollectionDetail() {
+        Log.d(TAG, "Navigating back to CollectionDetailFragment.");
         if (currentCollectionDetailFragment != null) {
             FragmentManager fragmentManager = getSupportFragmentManager();
 
@@ -182,18 +202,62 @@ public class MainActivity extends AppCompatActivity {
 
             activeFragment = currentCollectionDetailFragment;
         } else {
-            Log.e("MainActivity", "No CollectionDetailFragment is currently active!");
+            Log.e(TAG, "No CollectionDetailFragment is currently active!");
         }
     }
 
 
+    public void refreshCollections() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        Fragment collectionsFragment = fragmentManager.findFragmentByTag("CollectionsFragment");
 
+        if (collectionsFragment instanceof CollectionsFragment) {
+            ((CollectionsFragment) collectionsFragment).reloadData();
+        }
+    }
 
     public void refreshClothingList() {
-        if (clothesFragment instanceof ClothesFragment) {
-            ((ClothesFragment) clothesFragment).reloadData(); // Call a new method in ClothesFragment
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        Fragment fragment = fragmentManager.findFragmentByTag("ClothesFragment");
+
+        if (fragment instanceof ClothesFragment) {
+            ((ClothesFragment) fragment).reloadData();
+        } else {
+            Log.e(TAG, "ClothesFragment not found for refreshing.");
         }
     }
+
+    public void handleClothingDeletion(String originFragment, Bundle args) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+
+        if ("CollectionDetailFragment".equals(originFragment)) {
+            int collectionId = args.getInt("collection_id", -1);
+            String tag = "CollectionDetailFragment_" + collectionId;
+
+            // Find the CollectionDetailFragment and reload its data
+            CollectionDetailFragment fragment = (CollectionDetailFragment) fragmentManager.findFragmentByTag(tag);
+            if (fragment != null) {
+                fragment.reloadData();
+            } else {
+                Log.e(TAG, "CollectionDetailFragment not found for collection ID: " + collectionId);
+            }
+        }
+
+        // Always refresh the ClothesFragment
+        refreshClothingList();
+
+        // Navigate back to the appropriate fragment based on origin
+        if ("ClothesFragment".equals(originFragment)) {
+            navigateBackToClothesFragment();
+        } else if ("CollectionDetailFragment".equals(originFragment)) {
+            navigateBackToCollectionDetail();
+        }
+    }
+
+
+
+
+
 
 
 }

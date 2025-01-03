@@ -16,6 +16,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -190,20 +191,30 @@ public class ClothingDetailFragment extends Fragment {
     private void deleteClothing() {
         try {
             new ClothingManager(requireContext()).deleteClothingItem(clothingId);
-
             Toast.makeText(requireContext(), "Clothing item deleted!", Toast.LENGTH_SHORT).show();
 
-            // Navigate back and refresh the list in the parent fragment
-            navigateBack();
-
             if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).refreshClothingList(); // Add a method in MainActivity to trigger refresh
+                MainActivity mainActivity = (MainActivity) getActivity();
+
+                // Prepare arguments to notify the MainActivity
+                Bundle args = new Bundle();
+                args.putInt("collection_id", getArguments().getInt("collection_id", -1));
+                args.putString("collection_name", getArguments().getString("collection_name", ""));
+                mainActivity.handleClothingDeletion(originFragment, args);
             }
+
+            // Close the ClothingDetailFragment
+            navigateBack();
         } catch (Exception e) {
             Log.e(TAG, "Error deleting clothing item: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Failed to delete clothing item.", Toast.LENGTH_SHORT).show();
         }
     }
+
+
+
+
+
 
 
 

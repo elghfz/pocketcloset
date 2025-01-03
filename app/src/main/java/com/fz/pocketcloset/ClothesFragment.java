@@ -140,10 +140,18 @@ public class ClothesFragment extends Fragment {
         } else {
             if (getActivity() instanceof MainActivity) {
                 MainActivity mainActivity = (MainActivity) getActivity();
-                mainActivity.openClothingDetail(item.getId(), "ClothesFragment"); // Pass "ClothesFragment" as origin
+
+                // Call openClothingDetail with null values for collectionId and collectionName
+                mainActivity.openClothingDetail(
+                        item.getId(),            // clothingId
+                        "ClothesFragment",       // originTag
+                        -1,                      // collectionId (not applicable, set to -1)
+                        null                     // collectionName (not applicable, set to null)
+                );
             }
         }
     }
+
 
 
     private void handleItemLongClick(ClothingItem item) {

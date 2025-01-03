@@ -203,7 +203,9 @@ public class CollectionsFragment extends Fragment {
                 Character.isSupplementaryCodePoint(codePoint);
     }
 
-
+    public void reloadData() {
+        loadCollections();
+    }
 
 
     private void openCollection(Collection collection) {
@@ -223,7 +225,6 @@ public class CollectionsFragment extends Fragment {
             deleteButton.setVisibility(View.GONE);           // Hide "Delete" button
         }
     }
-
 
 
 }

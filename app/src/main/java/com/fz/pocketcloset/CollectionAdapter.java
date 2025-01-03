@@ -97,8 +97,15 @@ public class CollectionAdapter extends RecyclerView.Adapter<CollectionAdapter.Co
             return true;
         });
 
-        holder.selectCheckbox.setVisibility(selectionMode ? View.VISIBLE : View.GONE);
-        holder.selectCheckbox.setChecked(selectedItems.contains(collection));
+        // Manage checkbox visibility and state
+        if (selectionMode) {
+            holder.selectCheckbox.setVisibility(View.VISIBLE);
+            holder.selectCheckbox.setChecked(selectedItems.contains(collection));
+        } else {
+            holder.selectCheckbox.setVisibility(View.GONE);
+            holder.selectCheckbox.setChecked(false);
+        }
+
         holder.selectCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
                 selectedItems.add(collection);
@@ -106,8 +113,8 @@ public class CollectionAdapter extends RecyclerView.Adapter<CollectionAdapter.Co
                 selectedItems.remove(collection);
             }
 
-            // Notify fragment to exit selection mode if no items are selected
-            if (selectedItems.isEmpty()) {
+            // Exit selection mode if no items are selected
+            if (selectedItems.isEmpty() && selectionMode) {
                 onItemLongClickListener.onItemLongClick(null);
             }
         });

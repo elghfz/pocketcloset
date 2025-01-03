@@ -4,6 +4,10 @@
         android:icon="@drawable/closet_icon"
         android:title="Closet" />
     <item
+        android:id="@+id/nav_outfits"
+        android:icon="@drawable/outfits_icon"
+        android:title="Outfits" />
+    <item
         android:id="@+id/nav_collections"
         android:icon="@drawable/collections_icon"
         android:title="Collections" />

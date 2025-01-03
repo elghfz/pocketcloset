@@ -8,7 +8,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -35,7 +34,7 @@ public class CollectionDetailFragment extends Fragment {
     private int collectionId;
     private String collectionName;
     private String collectionEmoji;
-    private ImageButton renameButton, addClothesButton, removeFromCollectionButton, closeButton;
+    private ImageButton renameButton, addClothesButton, removeFromCollectionButton, closeButton, deleteButton;
 
     private boolean isSelectionMode = false;
     private final Set<ClothingItem> selectedItems = new HashSet<>();
@@ -77,6 +76,7 @@ public class CollectionDetailFragment extends Fragment {
             renameButton = view.findViewById(R.id.button_rename_collection);
             addClothesButton = view.findViewById(R.id.button_add_clothes_to_collection);
             removeFromCollectionButton = view.findViewById(R.id.button_remove_from_collection);
+            deleteButton = view.findViewById(R.id.deleteButton);
             closeButton = view.findViewById(R.id.button_close_collection);
 
             renameButton.setOnClickListener(v -> showRenameDialog());
@@ -84,6 +84,7 @@ public class CollectionDetailFragment extends Fragment {
             removeFromCollectionButton.setOnClickListener(v -> removeSelectedFromCollection());
             closeButton.setOnClickListener(v -> closeCollection());
             emojiTextView.setOnClickListener(v -> updateEmoji());
+            deleteButton.setOnClickListener(v -> deleteCollection());
 
             // Load the latest collection details
             loadCollectionDetails();
@@ -98,28 +99,50 @@ public class CollectionDetailFragment extends Fragment {
         return view;
     }
 
+
+    public void reloadData() {
+        Log.d(TAG, "reloadData: Reloading collection details...");
+        try {
+            loadCollectionDetails();
+            loadClothesInCollection();
+            updateButtonVisibility(); // Ensure buttons are updated
+        } catch (Exception e) {
+            Log.e(TAG, "Error reloading collection data: " + e.getMessage(), e);
+        }
+    }
+
+
+
+
     private void loadClothesInCollection() {
         try {
+            Log.d(TAG, "Loading clothes in collection...");
             List<ClothingItem> clothesInCollection = new CollectionsManager(requireContext())
                     .getClothesInCollection(collectionId);
 
-            adapter = new ClothingAdapter(
-                    clothesInCollection,
-                    this::handleItemClick,
-                    this::handleItemLongClick,
-                    isSelectionMode,
-                    true, // Show "Remove from Collection" button
-                    collectionId,
-                    null
-            );
+            Log.d(TAG, "Fetched " + clothesInCollection.size() + " clothing items for collection ID: " + collectionId);
 
-            recyclerView.setAdapter(adapter);
+            if (adapter == null) {
+                adapter = new ClothingAdapter(
+                        clothesInCollection,
+                        this::handleItemClick,
+                        this::handleItemLongClick,
+                        isSelectionMode,
+                        true,
+                        collectionId,
+                        null
+                );
+                recyclerView.setAdapter(adapter);
+                Log.d(TAG, "Adapter initialized and set to RecyclerView.");
+            } else {
+                adapter.updateData(clothesInCollection);
+                Log.d(TAG, "Adapter updated with new data. Item count: " + clothesInCollection.size());
+            }
         } catch (Exception e) {
             Log.e(TAG, "Error loading clothes in collection: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Error loading clothes in collection.", Toast.LENGTH_SHORT).show();
         }
     }
-
 
 
     private void handleItemClick(ClothingItem item) {
@@ -128,10 +151,18 @@ public class CollectionDetailFragment extends Fragment {
         } else {
             if (getActivity() instanceof MainActivity) {
                 MainActivity mainActivity = (MainActivity) getActivity();
-                mainActivity.openClothingDetail(item.getId(), "CollectionDetailFragment"); // Pass "CollectionDetailFragment" as origin
+
+                // Call openClothingDetail with the required parameters
+                mainActivity.openClothingDetail(
+                        item.getId(),                        // clothingId
+                        "CollectionDetailFragment",          // originTag
+                        collectionId,                        // collectionId (retrieved from the fragment's state)
+                        collectionName                       // collectionName (retrieved from the fragment's state)
+                );
             }
         }
     }
+
 
 
     private void handleItemLongClick(ClothingItem item) {
@@ -164,6 +195,7 @@ public class CollectionDetailFragment extends Fragment {
         isSelectionMode = false;
         selectedItems.clear();
         adapter.setSelectionMode(false);
+        adapter.notifyDataSetChanged();
         updateButtonVisibility();
     }
 
@@ -171,10 +203,12 @@ public class CollectionDetailFragment extends Fragment {
         if (isSelectionMode) {
             renameButton.setVisibility(View.GONE);
             addClothesButton.setVisibility(View.GONE);
+            deleteButton.setVisibility(View.GONE);
             removeFromCollectionButton.setVisibility(View.VISIBLE);
         } else {
             renameButton.setVisibility(View.VISIBLE);
             addClothesButton.setVisibility(View.VISIBLE);
+            deleteButton.setVisibility(View.VISIBLE);
             removeFromCollectionButton.setVisibility(View.GONE);
         }
     }
@@ -189,12 +223,14 @@ public class CollectionDetailFragment extends Fragment {
         loadClothesInCollection();
     }
 
+
     private void showRenameDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Rename Collection");
 
         final EditText input = new EditText(requireContext());
         input.setText(collectionName); // Pre-fill with the current name
+        input.setHint("Enter a new name");
         builder.setView(input);
 
         builder.setPositiveButton("Save", (dialog, which) -> {
@@ -224,6 +260,11 @@ public class CollectionDetailFragment extends Fragment {
                 collectionName = newName;
                 collectionNameTextView.setText(newName);
 
+                // Notify CollectionsFragment about the update
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).refreshCollections();
+                }
+
                 Toast.makeText(requireContext(), "Collection renamed successfully!", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(requireContext(), "Failed to rename collection.", Toast.LENGTH_SHORT).show();
@@ -233,6 +274,35 @@ public class CollectionDetailFragment extends Fragment {
             Toast.makeText(requireContext(), "Error renaming collection.", Toast.LENGTH_SHORT).show();
         }
     }
+
+    private void deleteCollection() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Delete Collection")
+                .setMessage("Are you sure you want to delete this collection? This action cannot be undone.")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    try {
+                        // Delete the collection from the database
+                        new CollectionsManager(requireContext()).deleteCollection(collectionId);
+
+                        // Notify the CollectionsFragment to refresh its data
+                        if (getActivity() instanceof MainActivity) {
+                            ((MainActivity) getActivity()).refreshCollections();
+                        }
+
+                        // Close the current fragment
+                        closeCollection();
+
+                        Toast.makeText(requireContext(), "Collection deleted successfully!", Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error deleting collection: " + e.getMessage(), e);
+                        Toast.makeText(requireContext(), "Failed to delete collection.", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+
 
 
     private void showAddClothesDialog() {
@@ -286,6 +356,11 @@ public class CollectionDetailFragment extends Fragment {
                 // Reload the collection details to reflect the updated emoji
                 loadCollectionDetails();
 
+                // Notify the CollectionsFragment about the update
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).refreshCollections();
+                }
+
                 Toast.makeText(requireContext(), "Emoji updated!", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(requireContext(), "Invalid emoji. Please try again.", Toast.LENGTH_SHORT).show();
@@ -295,6 +370,7 @@ public class CollectionDetailFragment extends Fragment {
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
         builder.show();
     }
+
     private boolean isEmoji(String input) {
         if (input == null || input.isEmpty()) {
             return false;
