@@ -44,6 +44,7 @@ public class ClothesFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
+        // Save the state of the clothing lists
         if (recyclerView != null && recyclerView.getLayoutManager() != null) {
             recyclerViewState = recyclerView.getLayoutManager().onSaveInstanceState();
         }
@@ -52,23 +53,40 @@ public class ClothesFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        loadClothingItems();
+
+        // Always reload data when the fragment is resumed
+        reloadData();
+
+        // Restore RecyclerView state
         if (recyclerViewState != null && recyclerView.getLayoutManager() != null) {
             recyclerView.post(() -> recyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState));
         }
     }
 
+
+
     @SuppressLint("WrongViewCast")
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_clothes, container, false);
+        // Inflate the fragment layout
+        return inflater.inflate(R.layout.fragment_clothes, container, false);
+    }
+
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         try {
+            // Initialize variables that depend on the view
+            filteredClothingList = new ArrayList<>();
+            clothingList = new ArrayList<>();
             clothingManager = new ClothingManager(requireContext());
+            dbHelper = new DatabaseHelper(requireContext());
+
             recyclerView = view.findViewById(R.id.recyclerView);
             recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 4));
-            dbHelper = new DatabaseHelper(requireContext());
 
             imagePickerHelper = new ImagePickerHelper(
                     this,
@@ -87,50 +105,64 @@ public class ClothesFragment extends Fragment {
             filterButton = view.findViewById(R.id.filterButton);
             clearFilterButton = view.findViewById(R.id.clearFilterButton);
 
+            // Set up button listeners
             deleteButton.setOnClickListener(v -> deleteSelectedItems());
             addToCollectionButton.setOnClickListener(v -> showCollectionSelectionDialog());
             addClothesButton.setOnClickListener(v -> showAddClothesDialog());
             filterButton.setOnClickListener(v -> showFilterDialog());
             clearFilterButton.setOnClickListener(v -> clearFilter());
 
+            // Load clothing items into the RecyclerView
             loadClothingItems();
+
+            // Update button visibility based on the current state
             updateButtonVisibility();
 
         } catch (Exception e) {
-            Log.e(TAG, "Error initializing ClothesFragment: " + e.getMessage(), e);
+            Log.e(TAG, "Error in onViewCreated: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Error initializing ClothesFragment.", Toast.LENGTH_SHORT).show();
         }
-
-        return view;
     }
+
 
 
     private void loadClothingItems() {
         try {
-            // Ensure filteredClothingList is initialized
-            if (filteredClothingList == null) {
-                filteredClothingList = new ArrayList<>();
+            // Fetch the clothing items from the database
+            clothingList = clothingManager.getAllClothingItems();
+
+            // Initialize or reset the filtered list
+            if (filteredClothingList == null || filteredClothingList.isEmpty()) {
+                filteredClothingList = new ArrayList<>(clothingList);
             }
 
-            adapter = new ClothingAdapter(
-                    filteredClothingList,
-                    this::handleItemClick,
-                    this::handleItemLongClick,
-                    false,
-                    false,
-                    -1,
-                    null
-            );
+            // Update the adapter with the filtered list
+            if (adapter == null) {
+                adapter = new ClothingAdapter(
+                        filteredClothingList,
+                        this::handleItemClick,
+                        this::handleItemLongClick,
+                        false,
+                        false,
+                        -1,
+                        null
+                );
+                recyclerView.setAdapter(adapter);
+            } else {
+                adapter.updateData(filteredClothingList);
+            }
 
-            recyclerView.setAdapter(adapter);
             adapter.notifyDataSetChanged();
-            updateClearFilterButtonVisibility(Collections.emptySet()); // Reset filter visibility
+
+            // Reset filter visibility
+            updateClearFilterButtonVisibility(Collections.emptySet());
 
         } catch (Exception e) {
             Log.e(TAG, "Error loading clothing items: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Error loading clothing items.", Toast.LENGTH_SHORT).show();
         }
     }
+
 
 
 
@@ -186,6 +218,7 @@ public class ClothesFragment extends Fragment {
 
         recyclerView.post(() -> {
             adapter.setSelectionMode(false);
+            adapter.clearSelections(); // Clear any selection state in the adapter
             adapter.notifyDataSetChanged();
         });
 
@@ -227,7 +260,6 @@ public class ClothesFragment extends Fragment {
         updateAdapterSafely();
     }
 
-
     private void showCollectionSelectionDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Add to Collection");
@@ -261,7 +293,7 @@ public class ClothesFragment extends Fragment {
                             .assignClothingToCollection(clothingItem.getId(), selectedCollectionId);
                 }
                 Toast.makeText(requireContext(), "Clothes added to collection!", Toast.LENGTH_SHORT).show();
-                exitSelectionMode();
+                exitSelectionMode(); // Clear selection after action
             } else {
                 Toast.makeText(requireContext(), "Please select a collection.", Toast.LENGTH_SHORT).show();
             }
@@ -270,6 +302,7 @@ public class ClothesFragment extends Fragment {
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
         builder.show();
     }
+
 
     private void showAddClothesDialog() {
         if (imagePickerHelper != null) {
@@ -307,12 +340,13 @@ public class ClothesFragment extends Fragment {
             Set<String> selectedTagSet = new HashSet<>();
             for (int i = 0; i < tags.length; i++) {
                 if (selectedTags[i]) {
-                    selectedTagSet.add(tags[i].trim()); // Normalize and trim tags
+                    selectedTagSet.add(tags[i].trim().toLowerCase());
                 }
             }
 
             if (selectedTagSet.isEmpty()) {
-                filteredClothingList = new ArrayList<>(clothingList); // No tags selected, show all items
+                // Reset to show all items
+                filteredClothingList = new ArrayList<>(clothingList);
             } else {
                 filteredClothingList.clear();
                 for (ClothingItem item : clothingList) {
@@ -328,17 +362,20 @@ public class ClothesFragment extends Fragment {
                 }
             }
 
+            // Update the adapter with filtered data
             adapter.updateData(filteredClothingList);
             adapter.notifyDataSetChanged();
 
-            // Hide Add Clothes button while filtering
+            // Update UI based on filter state
             updateAddClothesButtonVisibility(false);
-            updateClearFilterButtonVisibility(selectedTagSet); // Pass the selected tags
+            updateClearFilterButtonVisibility(selectedTagSet);
 
         } catch (Exception e) {
             Log.e(TAG, "Error applying filter: " + e.getMessage(), e);
         }
     }
+
+
 
 
     private Set<String> normalizeTags(Set<String> tags) {
@@ -349,16 +386,15 @@ public class ClothesFragment extends Fragment {
         return normalizedTags;
     }
 
-
-
     private void clearFilter() {
         try {
-            filteredClothingList = new ArrayList<>(clothingList); // Reset to the full list
+            filteredClothingList = new ArrayList<>(clothingList); // Reset to all items
             adapter.updateData(filteredClothingList);
             adapter.notifyDataSetChanged();
-            // Restore Add Clothes button visibility
+
+            // Reset the UI
             updateAddClothesButtonVisibility(true);
-            updateClearFilterButtonVisibility(Collections.emptySet()); // No tags selected
+            updateClearFilterButtonVisibility(Collections.emptySet());
         } catch (Exception e) {
             Log.e(TAG, "Error clearing filter: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Failed to clear filter.", Toast.LENGTH_SHORT).show();

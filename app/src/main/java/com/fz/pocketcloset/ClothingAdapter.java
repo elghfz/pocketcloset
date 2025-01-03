@@ -117,6 +117,13 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
         notifyDataSetChanged();
     }
 
+    public void clearSelections() {
+        if (selectedItems != null) {
+            selectedItems.clear();
+        }
+        notifyDataSetChanged();
+    }
+
 
     @Override
     public int getItemCount() {

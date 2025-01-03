@@ -68,7 +68,7 @@ public class CollectionDetailFragment extends Fragment {
 
             // Initialize UI elements
             recyclerView = view.findViewById(R.id.recyclerView);
-            recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+            recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 4));
 
             collectionNameTextView = view.findViewById(R.id.textViewCollectionName);
             emojiTextView = view.findViewById(R.id.emojiView);

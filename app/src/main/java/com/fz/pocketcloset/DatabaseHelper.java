@@ -29,7 +29,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String CREATE_TABLE_COLLECTIONS = "CREATE TABLE Collections (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
             "name TEXT NOT NULL, " +
-            "emoji TEXT DEFAULT '📁'" + // Add the emoji column here
+            "emoji TEXT DEFAULT '📁'" +
             ");";
 
 

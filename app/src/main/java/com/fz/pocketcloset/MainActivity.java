@@ -23,6 +23,14 @@ public class MainActivity extends AppCompatActivity {
 
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (activeFragment instanceof ClothesFragment) {
+            ((ClothesFragment) activeFragment).reloadData();
+        }
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
