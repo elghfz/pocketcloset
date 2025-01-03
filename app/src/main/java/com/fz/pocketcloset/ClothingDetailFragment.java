@@ -96,7 +96,13 @@ public class ClothingDetailFragment extends Fragment {
                         collection -> {
                             // Open the CollectionDetailFragment for the selected collection
                             if (getActivity() instanceof MainActivity) {
-                                ((MainActivity) getActivity()).openCollectionDetail(collection.getId(), collection.getName());
+                                MainActivity mainActivity = (MainActivity) getActivity();
+
+                                mainActivity.openCollectionDetail(
+                                        collection.getId(),
+                                        collection.getName(),
+                                        "ClothingDetailFragment" // Set the origin
+                                );
                             }
                         },
                         null, // No long-click handler for collection items here
@@ -177,10 +183,18 @@ public class ClothingDetailFragment extends Fragment {
     void navigateBack() {
         if (getActivity() instanceof MainActivity) {
             MainActivity mainActivity = (MainActivity) getActivity();
-            String originFragment = getArguments().getString("origin", "ClothesFragment");
 
-            if ("CollectionDetailFragment".equals(originFragment)) {
-                mainActivity.navigateBackToCollectionDetail();
+            String origin = getArguments() != null ? getArguments().getString("origin") : "ClothesFragment";
+
+            if ("CollectionDetailFragment".equals(origin)) {
+                int collectionId = getArguments().getInt("collection_id", -1);
+                String collectionName = getArguments().getString("collection_name");
+
+                if (collectionId != -1 && collectionName != null) {
+                    mainActivity.openCollectionDetail(collectionId, collectionName, origin);
+                } else {
+                    Log.e(TAG, "Missing collection ID or name for navigation.");
+                }
             } else {
                 mainActivity.navigateBackToClothesFragment();
             }

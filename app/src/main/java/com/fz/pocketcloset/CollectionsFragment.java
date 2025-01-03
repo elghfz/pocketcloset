@@ -211,7 +211,7 @@ public class CollectionsFragment extends Fragment {
     private void openCollection(Collection collection) {
         if (!isSelectionMode) {
             if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).openCollectionDetail(collection.getId(), collection.getName());
+                ((MainActivity) getActivity()).openCollectionDetail(collection.getId(), collection.getName(), "CollectionsFragment");
             }
         }
     }
@@ -225,6 +225,5 @@ public class CollectionsFragment extends Fragment {
             deleteButton.setVisibility(View.GONE);           // Hide "Delete" button
         }
     }
-
 
 }

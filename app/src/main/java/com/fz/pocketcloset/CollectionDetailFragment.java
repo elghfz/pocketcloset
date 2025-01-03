@@ -82,7 +82,7 @@ public class CollectionDetailFragment extends Fragment {
             renameButton.setOnClickListener(v -> showRenameDialog());
             addClothesButton.setOnClickListener(v -> showAddClothesDialog());
             removeFromCollectionButton.setOnClickListener(v -> removeSelectedFromCollection());
-            closeButton.setOnClickListener(v -> closeCollection());
+            closeButton.setOnClickListener(v -> navigateBack());
             emojiTextView.setOnClickListener(v -> updateEmoji());
             deleteButton.setOnClickListener(v -> deleteCollection());
 
@@ -290,7 +290,7 @@ public class CollectionDetailFragment extends Fragment {
                         }
 
                         // Close the current fragment
-                        closeCollection();
+                        navigateBack();
 
                         Toast.makeText(requireContext(), "Collection deleted successfully!", Toast.LENGTH_SHORT).show();
                     } catch (Exception e) {
@@ -380,10 +380,19 @@ public class CollectionDetailFragment extends Fragment {
     }
 
 
-
-    void closeCollection() {
+    void navigateBack() {
         if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).closeCollectionDetail();
+            MainActivity mainActivity = (MainActivity) getActivity();
+
+            String originFragment = getArguments() != null ? getArguments().getString("origin", "CollectionsFragment") : "CollectionsFragment";
+
+            if ("ClothingDetailFragment".equals(originFragment)) {
+                mainActivity.navigateBackToClothingDetail(); // Navigate to ClothingDetailFragment
+            } else {
+                mainActivity.navigateBackToCollectionsFragment(); // Navigate to CollectionsFragment
+            }
         }
     }
+
+
 }
