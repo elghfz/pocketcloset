@@ -1,269 +1,82 @@
 package com.fz.pocketcloset;
 
-import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
-
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Fragment clothesFragment;
-    private Fragment collectionsFragment;
-    private Fragment outfitsFragment;
-    private Fragment activeFragment; // Tracks the currently active fragment
-    private Fragment currentCollectionDetailFragment; // Tracks the active CollectionDetailFragment
+    private static final String TAG = "MainActivity";
 
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (activeFragment instanceof ClothesFragment) {
-            ((ClothesFragment) activeFragment).reloadData();
-        }
-    }
+    private ViewPager2 viewPager;
+    private View fragmentContainer;
+    private Fragment activeFragment;
+    private Fragment currentDetailFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize fragments
-        FragmentManager fragmentManager = getSupportFragmentManager();
+        // Initialize ViewPager2 for swiping between main fragments
+        viewPager = findViewById(R.id.view_pager);
+        fragmentContainer = findViewById(R.id.fragment_container); // For detail fragments
+        viewPager.setAdapter(new MainFragmentAdapter(this));
 
-        if (fragmentManager.findFragmentByTag("ClothesFragment") == null) {
-            clothesFragment = new ClothesFragment();
-            fragmentManager.beginTransaction()
-                    .add(R.id.fragment_container, clothesFragment, "ClothesFragment")
-                    .hide(clothesFragment)
-                    .commit();
-        } else {
-            clothesFragment = fragmentManager.findFragmentByTag("ClothesFragment");
-        }
-
-        if (fragmentManager.findFragmentByTag("OutfitsFragment") == null) {
-            outfitsFragment = new OutfitsFragment();
-            fragmentManager.beginTransaction()
-                    .add(R.id.fragment_container, outfitsFragment, "OutfitsFragment")
-                    .commit();
-        } else {
-            outfitsFragment = fragmentManager.findFragmentByTag("OutfitsFragment");
-        }
-
-        if (fragmentManager.findFragmentByTag("CollectionsFragment") == null) {
-            collectionsFragment = new CollectionsFragment();
-            fragmentManager.beginTransaction()
-                    .add(R.id.fragment_container, collectionsFragment, "CollectionsFragment")
-                    .hide(collectionsFragment)
-                    .commit();
-        } else {
-            collectionsFragment = fragmentManager.findFragmentByTag("CollectionsFragment");
-        }
-
-        activeFragment = outfitsFragment; // Start with OutfitsFragment as the active fragment
-
-        // Setup navigation
+        // Initialize BottomNavigationView
         BottomNavigationView bottomNavigation = findViewById(R.id.bottom_navigation);
 
-        // Set the default selected item to Outfits
-        bottomNavigation.setSelectedItemId(R.id.nav_outfits);
+        // Sync BottomNavigationView with ViewPager2
+        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                if (position == 0) {
+                    bottomNavigation.setSelectedItemId(R.id.nav_clothes);
+                } else if (position == 1) {
+                    bottomNavigation.setSelectedItemId(R.id.nav_outfits);
+                } else if (position == 2) {
+                    bottomNavigation.setSelectedItemId(R.id.nav_collections);
+                }
+                closeDetailFragment(); // Automatically close detail fragments when swiping
+            }
+        });
 
         bottomNavigation.setOnItemSelectedListener(item -> {
             if (item.getItemId() == R.id.nav_clothes) {
-                switchToFragment(clothesFragment);
+                viewPager.setCurrentItem(0, true);
             } else if (item.getItemId() == R.id.nav_outfits) {
-                switchToFragment(outfitsFragment);
+                viewPager.setCurrentItem(1, true);
             } else if (item.getItemId() == R.id.nav_collections) {
-                switchToFragment(collectionsFragment);
+                viewPager.setCurrentItem(2, true);
             }
             return true;
         });
     }
 
-
-    private void switchToFragment(Fragment targetFragment) {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-
-        // Clear back stack to remove any detail fragments
-        fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
-
-        // Hide all fragments and show the target
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        for (Fragment fragment : fragmentManager.getFragments()) {
-            if (fragment != null) {
-                transaction.hide(fragment);
-            }
-        }
-        transaction.show(targetFragment).commit();
-
-        // Update the active fragment
-        activeFragment = targetFragment;
-    }
-
-    public void openCollectionDetail(int collectionId, String collectionName, @Nullable String originTag) {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-
-        String fragmentTag = "CollectionDetailFragment_" + collectionId;
-
-        CollectionDetailFragment collectionDetailFragment = (CollectionDetailFragment) fragmentManager.findFragmentByTag(fragmentTag);
-
-        if (collectionDetailFragment == null) {
-            collectionDetailFragment = new CollectionDetailFragment();
-            Bundle args = new Bundle();
-            args.putInt("collection_id", collectionId);
-            args.putString("collection_name", collectionName);
-            args.putString("origin", originTag); // Pass the origin tag
-            collectionDetailFragment.setArguments(args);
-
-            fragmentManager.beginTransaction()
-                    .hide(activeFragment)
-                    .add(R.id.fragment_container, collectionDetailFragment, fragmentTag)
-                    .addToBackStack(fragmentTag)
-                    .commit();
-        } else {
-            fragmentManager.beginTransaction()
-                    .hide(activeFragment)
-                    .show(collectionDetailFragment)
-                    .addToBackStack(fragmentTag)
-                    .commit();
-        }
-
-        activeFragment = collectionDetailFragment;
-    }
-
-
-
-
-    public void navigateBackToClothingDetail() {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-
-        // Find the ClothingDetailFragment
-        Fragment clothingDetailFragment = fragmentManager.findFragmentByTag("ClothingDetailFragment");
-
-        if (clothingDetailFragment != null) {
-            fragmentManager.beginTransaction()
-                    .hide(activeFragment) // Hide the active fragment
-                    .show(clothingDetailFragment) // Show the ClothingDetailFragment
-                    .commit();
-
-            activeFragment = clothingDetailFragment;
-        } else {
-            Log.e(TAG, "ClothingDetailFragment not found.");
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Refresh the active fragment
+        if (activeFragment instanceof ClothesFragment) {
+            refreshClothingList();
+        } else if (activeFragment instanceof CollectionsFragment) {
+            refreshCollections();
         }
     }
 
-
-    public void navigateBackToCollectionsFragment() {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-
-        Fragment collectionsFragment = fragmentManager.findFragmentByTag("CollectionsFragment");
-
-        if (collectionsFragment != null) {
-            fragmentManager.beginTransaction()
-                    .hide(activeFragment) // Hide the active fragment
-                    .show(collectionsFragment) // Show the CollectionsFragment
-                    .commit();
-
-            activeFragment = collectionsFragment;
-        } else {
-            Log.e(TAG, "CollectionsFragment not found.");
-        }
-    }
-
-
-
-
-    public void openClothingDetail(int clothingId, @Nullable String originTag, int collectionId, @Nullable String collectionName) {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-
-        ClothingDetailFragment clothingDetailFragment = (ClothingDetailFragment)
-                fragmentManager.findFragmentByTag("ClothingDetailFragment");
-
-        if (clothingDetailFragment == null) {
-            clothingDetailFragment = new ClothingDetailFragment();
-            Bundle args = new Bundle();
-            args.putInt("clothing_id", clothingId);
-            args.putString("origin", originTag);
-            args.putInt("collection_id", collectionId);
-            args.putString("collection_name", collectionName);
-            clothingDetailFragment.setArguments(args);
-
-            fragmentManager.beginTransaction()
-                    .hide(activeFragment)
-                    .add(R.id.fragment_container, clothingDetailFragment, "ClothingDetailFragment")
-                    .addToBackStack(null)
-                    .commit();
-        } else {
-            fragmentManager.beginTransaction()
-                    .hide(activeFragment)
-                    .show(clothingDetailFragment)
-                    .addToBackStack(null)
-                    .commit();
-        }
-
-        activeFragment = clothingDetailFragment;
-    }
-
-
-
-    public void navigateBackToClothesFragment() {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-
-        // Clear back stack and switch back to clothes fragment
-        fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
-        fragmentManager.beginTransaction()
-                .hide(activeFragment)
-                .show(clothesFragment)
-                .commit();
-
-        activeFragment = clothesFragment;
-    }
-
-    public void navigateBackToCollectionDetail() {
-        Log.d(TAG, "Navigating back to CollectionDetailFragment.");
-        if (currentCollectionDetailFragment != null) {
-            FragmentManager fragmentManager = getSupportFragmentManager();
-
-            fragmentManager.popBackStack(); // Remove the ClothingDetailFragment from the back stack
-            fragmentManager.beginTransaction()
-                    .hide(activeFragment)
-                    .show(currentCollectionDetailFragment)
-                    .commit();
-
-            activeFragment = currentCollectionDetailFragment;
-        } else {
-            Log.e(TAG, "No CollectionDetailFragment is currently active!");
-        }
-    }
-
-
-    public void refreshCollections() {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        Fragment collectionsFragment = fragmentManager.findFragmentByTag("CollectionsFragment");
-
-        if (collectionsFragment instanceof CollectionsFragment) {
-            ((CollectionsFragment) collectionsFragment).reloadData();
-        }
-    }
-
-    public void refreshClothingList() {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        Fragment fragment = fragmentManager.findFragmentByTag("ClothesFragment");
-
-        if (fragment instanceof ClothesFragment) {
-            ((ClothesFragment) fragment).reloadData();
-        } else {
-            Log.e(TAG, "ClothesFragment not found for refreshing.");
-        }
-    }
-
+    /**
+     * Handles deletion of a clothing item.
+     */
     public void handleClothingDeletion(String originFragment, Bundle args) {
         FragmentManager fragmentManager = getSupportFragmentManager();
 
@@ -274,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
             // Find the CollectionDetailFragment and reload its data
             CollectionDetailFragment fragment = (CollectionDetailFragment) fragmentManager.findFragmentByTag(tag);
             if (fragment != null) {
-                fragment.reloadData();
+                fragment.reloadData(); // Refresh collection details
             } else {
                 Log.e(TAG, "CollectionDetailFragment not found for collection ID: " + collectionId);
             }
@@ -292,9 +105,272 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    public void handleCollectionDeletion(int collectionId, String originFragment) {
+        // Refresh the CollectionsFragment
+        refreshCollections();
+
+        // Navigate back to the correct fragment
+        if ("ClothingDetailFragment".equals(originFragment)) {
+            navigateBackToClothingDetail();
+        } else {
+            navigateBackToCollectionsFragment();
+        }
+
+        Log.d(TAG, "Collection deletion handled. Collection ID: " + collectionId + ", Origin: " + originFragment);
+    }
+
+
+    /**
+     * Opens a ClothingDetailFragment.
+     */
+    public void openClothingDetail(int clothingId, @Nullable String originTag, int collectionId, @Nullable String collectionName) {
+        String tag = "ClothingDetailFragment_" + clothingId;
+
+        // Log dynamic tag for debugging
+        Log.d(TAG, "Opening ClothingDetailFragment with tag: " + tag);
+
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        ClothingDetailFragment clothingDetailFragment = (ClothingDetailFragment) fragmentManager.findFragmentByTag(tag);
+
+        if (clothingDetailFragment == null) {
+            // Create a new instance if it doesn't exist
+            clothingDetailFragment = new ClothingDetailFragment();
+        }
+
+        // Update arguments
+        Bundle args = new Bundle();
+        args.putInt("clothing_id", clothingId);
+        args.putString("origin", originTag);
+        args.putInt("collection_id", collectionId);
+        args.putString("collection_name", collectionName);
+        clothingDetailFragment.setArguments(args);
+
+        // Show the fragment
+        showDetailFragment(clothingDetailFragment, tag);
+
+        // Update active fragment state
+        activeFragment = clothingDetailFragment;
+        currentDetailFragment = clothingDetailFragment;
+    }
+
+
+
+    /**
+     * Opens a CollectionDetailFragment.
+     */
+    public void openCollectionDetail(int collectionId, String collectionName, @Nullable String originTag) {
+        String tag = "CollectionDetailFragment_" + collectionId;
+
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        CollectionDetailFragment collectionDetailFragment = (CollectionDetailFragment) fragmentManager.findFragmentByTag(tag);
+
+        if (collectionDetailFragment == null) {
+            collectionDetailFragment = new CollectionDetailFragment();
+        }
+
+        // Update arguments
+        Bundle args = new Bundle();
+        args.putInt("collection_id", collectionId);
+        args.putString("collection_name", collectionName);
+        args.putString("origin", originTag);
+
+        // Pass clothing_id if coming from a ClothingDetailFragment
+        if (activeFragment instanceof ClothingDetailFragment) {
+            int clothingId = activeFragment.getArguments() != null ? activeFragment.getArguments().getInt("clothing_id", -1) : -1;
+            if (clothingId != -1) {
+                args.putInt("clothing_id", clothingId);
+            }
+        }
+
+        collectionDetailFragment.setArguments(args);
+
+        // Show the fragment
+        showDetailFragment(collectionDetailFragment, tag);
+    }
+
+
+    /**
+     * Handles showing a detail fragment.
+     */
+    private void showDetailFragment(Fragment detailFragment, String tag) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+
+        // Ensure ViewPager2 is hidden and fragment container is visible
+        viewPager.setVisibility(View.GONE);
+        fragmentContainer.setVisibility(View.VISIBLE);
+
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        transaction.replace(R.id.fragment_container, detailFragment, tag)
+                .addToBackStack(tag)
+                .commit();
+
+        currentDetailFragment = detailFragment;
+        activeFragment = detailFragment;
+    }
+
+    /**
+     * Closes the currently open detail fragment.
+     */
+    private void closeDetailFragment() {
+        if (currentDetailFragment != null) {
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            fragmentManager.popBackStack(); // Remove from back stack
+            currentDetailFragment = null; // Clear current detail fragment reference
+
+            // Show ViewPager2 again and hide fragment container
+            viewPager.setVisibility(View.VISIBLE);
+            fragmentContainer.setVisibility(View.GONE);
+        }
+    }
+
+    public void refreshClothingList() {
+        MainFragmentAdapter adapter = (MainFragmentAdapter) viewPager.getAdapter();
+
+        if (adapter != null) {
+            ClothesFragment clothesFragment = (ClothesFragment) adapter.getFragmentAtPosition(0);
+
+            if (clothesFragment != null) {
+                clothesFragment.reloadData();
+                Log.d(TAG, "ClothesFragment refreshed.");
+            } else {
+                Log.e(TAG, "ClothesFragment not found.");
+            }
+        } else {
+            Log.e(TAG, "MainFragmentAdapter not initialized.");
+        }
+    }
+
+
+
+
+    public void refreshCollections() {
+        MainFragmentAdapter adapter = (MainFragmentAdapter) viewPager.getAdapter();
+
+        if (adapter != null) {
+            CollectionsFragment collectionsFragment = (CollectionsFragment) adapter.getFragmentAtPosition(2);
+
+            if (collectionsFragment != null) {
+                collectionsFragment.reloadData();
+                Log.d(TAG, "CollectionsFragment refreshed.");
+            } else {
+                Log.e(TAG, "CollectionsFragment not found.");
+            }
+        } else {
+            Log.e(TAG, "MainFragmentAdapter not initialized.");
+        }
+    }
 
 
 
 
 
+
+    public void navigateBackToClothingDetail() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        String tag = "ClothingDetailFragment";
+
+        // Check if the fragment exists in the FragmentManager
+        ClothingDetailFragment clothingDetailFragment = (ClothingDetailFragment) fragmentManager.findFragmentByTag(tag);
+
+        if (clothingDetailFragment != null && clothingDetailFragment.isAdded()) {
+            // Show the existing fragment
+            fragmentManager.beginTransaction()
+                    .hide(activeFragment)
+                    .show(clothingDetailFragment)
+                    .commit();
+            currentDetailFragment = clothingDetailFragment;
+            activeFragment = clothingDetailFragment;
+        } else {
+            // Re-create the fragment with arguments stored in the active fragment's Bundle
+            if (activeFragment != null && activeFragment.getArguments() != null) {
+                Bundle args = activeFragment.getArguments();
+
+                int clothingId = args.getInt("clothing_id", -1);
+                String origin = args.getString("origin", "ClothesFragment");
+                int collectionId = args.getInt("collection_id", -1);
+                String collectionName = args.getString("collection_name", "");
+
+                if (clothingId != -1) {
+                    ClothingDetailFragment newFragment = new ClothingDetailFragment();
+                    Bundle newArgs = new Bundle();
+                    newArgs.putInt("clothing_id", clothingId);
+                    newArgs.putString("origin", origin);
+                    newArgs.putInt("collection_id", collectionId);
+                    newArgs.putString("collection_name", collectionName);
+                    newFragment.setArguments(newArgs);
+
+                    fragmentManager.beginTransaction()
+                            .hide(activeFragment)
+                            .add(R.id.fragment_container, newFragment, tag)
+                            .addToBackStack(tag)
+                            .commit();
+                    currentDetailFragment = newFragment;
+                    activeFragment = newFragment;
+                } else {
+                    Log.e(TAG, "Missing clothing ID for recreating ClothingDetailFragment.");
+                }
+            } else {
+                Log.e(TAG, "No arguments available to recreate ClothingDetailFragment.");
+            }
+        }
+    }
+
+    public void navigateBackToCollectionDetail() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        String tag = "CollectionDetailFragment";
+
+        CollectionDetailFragment collectionDetailFragment = (CollectionDetailFragment) fragmentManager.findFragmentByTag(tag);
+
+        if (collectionDetailFragment != null && collectionDetailFragment.isAdded()) {
+            // Show the existing fragment
+            fragmentManager.beginTransaction()
+                    .hide(activeFragment)
+                    .show(collectionDetailFragment)
+                    .commit();
+            currentDetailFragment = collectionDetailFragment;
+            activeFragment = collectionDetailFragment;
+        } else {
+            // Re-create the fragment with arguments stored in the active fragment's Bundle
+            if (activeFragment != null && activeFragment.getArguments() != null) {
+                Bundle args = activeFragment.getArguments();
+
+                int collectionId = args.getInt("collection_id", -1);
+                String collectionName = args.getString("collection_name", "");
+                String origin = args.getString("origin", "CollectionsFragment");
+
+                if (collectionId != -1) {
+                    CollectionDetailFragment newFragment = new CollectionDetailFragment();
+                    Bundle newArgs = new Bundle();
+                    newArgs.putInt("collection_id", collectionId);
+                    newArgs.putString("collection_name", collectionName);
+                    newArgs.putString("origin", origin);
+                    newFragment.setArguments(newArgs);
+
+                    fragmentManager.beginTransaction()
+                            .hide(activeFragment)
+                            .add(R.id.fragment_container, newFragment, tag)
+                            .addToBackStack(tag)
+                            .commit();
+                    currentDetailFragment = newFragment;
+                    activeFragment = newFragment;
+                } else {
+                    Log.e(TAG, "Missing collection ID for recreating CollectionDetailFragment.");
+                }
+            } else {
+                Log.e(TAG, "No arguments available to recreate CollectionDetailFragment.");
+            }
+        }
+    }
+
+
+
+    public void navigateBackToCollectionsFragment() {
+        closeDetailFragment();
+        viewPager.setCurrentItem(2, true);
+    }
+
+    public void navigateBackToClothesFragment() {
+        closeDetailFragment();
+        viewPager.setCurrentItem(0, true);
+    }
 }

@@ -31,6 +31,8 @@ public class CollectionsFragment extends Fragment {
     private boolean isSelectionMode = false;
     private final Set<Collection> selectedItems = new HashSet<>();
 
+
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -61,24 +63,27 @@ public class CollectionsFragment extends Fragment {
 
     private void loadCollections() {
         try {
-            // Fetch the latest collections from the database
             List<Collection> collections = new CollectionsManager(requireContext()).getAllCollections();
 
-            // Update the adapter with the latest data
-            adapter = new CollectionAdapter(
-                    collections,
-                    this::handleItemClick,
-                    this::handleItemLongClick,
-                    isSelectionMode,
-                    this::updateEmoji
-            );
-
-            recyclerView.setAdapter(adapter);
+            if (adapter == null) {
+                adapter = new CollectionAdapter(
+                        collections,
+                        this::handleItemClick,
+                        this::handleItemLongClick,
+                        isSelectionMode,
+                        this::updateEmoji
+                );
+                recyclerView.setAdapter(adapter);
+            } else {
+                adapter.updateData(collections); // Dynamically update the data
+                adapter.notifyDataSetChanged();
+            }
         } catch (Exception e) {
             Log.e(TAG, "Error loading collections: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Error loading collections.", Toast.LENGTH_SHORT).show();
         }
     }
+
 
     private void updateEmoji(Collection collection) {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());

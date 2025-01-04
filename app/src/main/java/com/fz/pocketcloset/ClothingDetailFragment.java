@@ -32,6 +32,11 @@ public class ClothingDetailFragment extends Fragment {
     private String originFragment; // Tracks where the user came from
     private DatabaseHelper dbHelper;
 
+    public void onResume() {
+        super.onResume();
+        reloadData(); // Ensure data is refreshed whenever the fragment becomes active
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -184,7 +189,7 @@ public class ClothingDetailFragment extends Fragment {
         if (getActivity() instanceof MainActivity) {
             MainActivity mainActivity = (MainActivity) getActivity();
 
-            String origin = getArguments() != null ? getArguments().getString("origin") : "ClothesFragment";
+            String origin = getArguments() != null ? getArguments().getString("origin", "ClothesFragment") : "ClothesFragment";
 
             if ("CollectionDetailFragment".equals(origin)) {
                 int collectionId = getArguments().getInt("collection_id", -1);
@@ -204,27 +209,39 @@ public class ClothingDetailFragment extends Fragment {
 
     private void deleteClothing() {
         try {
+            // Delete the clothing item
             new ClothingManager(requireContext()).deleteClothingItem(clothingId);
+
             Toast.makeText(requireContext(), "Clothing item deleted!", Toast.LENGTH_SHORT).show();
 
             if (getActivity() instanceof MainActivity) {
                 MainActivity mainActivity = (MainActivity) getActivity();
 
-                // Prepare arguments to notify the MainActivity
+                // Prepare arguments for MainActivity
                 Bundle args = new Bundle();
                 args.putInt("collection_id", getArguments().getInt("collection_id", -1));
                 args.putString("collection_name", getArguments().getString("collection_name", ""));
+
+                // Notify MainActivity
                 mainActivity.handleClothingDeletion(originFragment, args);
             }
-
-            // Close the ClothingDetailFragment
-            navigateBack();
         } catch (Exception e) {
             Log.e(TAG, "Error deleting clothing item: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Failed to delete clothing item.", Toast.LENGTH_SHORT).show();
         }
     }
 
+
+
+    public void reloadData() {
+        try {
+            Log.d(TAG, "Reloading clothing details...");
+            loadClothingDetails(); // Reuse the existing method to reload data
+        } catch (Exception e) {
+            Log.e(TAG, "Error reloading clothing data: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Failed to reload clothing details.", Toast.LENGTH_SHORT).show();
+        }
+    }
 
 
 

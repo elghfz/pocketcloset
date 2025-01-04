@@ -255,9 +255,21 @@ public class ClothesFragment extends Fragment {
 
 
     public void reloadData() {
-        clothingList = clothingManager.getAllClothingItems(); // Reload from DB
-        filteredClothingList = new ArrayList<>(clothingList); // Reset filtered list
-        updateAdapterSafely();
+        try {
+            // Reload the full clothing list from the database
+            clothingList = clothingManager.getAllClothingItems();
+
+            // Reset the filtered list to match the full clothing list
+            filteredClothingList = new ArrayList<>(clothingList);
+
+            // Safely update the adapter with the new data
+            updateAdapterSafely();
+
+            Log.d(TAG, "ClothesFragment data reloaded. Total items: " + clothingList.size());
+        } catch (Exception e) {
+            Log.e(TAG, "Error reloading data in ClothesFragment: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Error reloading data.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void showCollectionSelectionDialog() {

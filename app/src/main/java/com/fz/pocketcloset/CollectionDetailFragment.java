@@ -39,6 +39,13 @@ public class CollectionDetailFragment extends Fragment {
     private boolean isSelectionMode = false;
     private final Set<ClothingItem> selectedItems = new HashSet<>();
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        reloadData(); // Ensure data is refreshed whenever the fragment becomes active
+    }
+
+
     private void loadCollectionDetails() {
         try {
             // Fetch the latest collection details from the database
@@ -248,7 +255,6 @@ public class CollectionDetailFragment extends Fragment {
 
     private void renameCollection(String newName) {
         try {
-            // Update the collection name in the database
             SQLiteDatabase db = dbHelper.getWritableDatabase();
             ContentValues values = new ContentValues();
             values.put("name", newName);
@@ -256,11 +262,10 @@ public class CollectionDetailFragment extends Fragment {
             db.close();
 
             if (rowsAffected > 0) {
-                // Update the local collection name and UI
                 collectionName = newName;
                 collectionNameTextView.setText(newName);
 
-                // Notify CollectionsFragment about the update
+                // Notify parent fragment
                 if (getActivity() instanceof MainActivity) {
                     ((MainActivity) getActivity()).refreshCollections();
                 }
@@ -275,6 +280,8 @@ public class CollectionDetailFragment extends Fragment {
         }
     }
 
+
+
     private void deleteCollection() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Delete Collection")
@@ -284,15 +291,15 @@ public class CollectionDetailFragment extends Fragment {
                         // Delete the collection from the database
                         new CollectionsManager(requireContext()).deleteCollection(collectionId);
 
-                        // Notify the CollectionsFragment to refresh its data
+                        Toast.makeText(requireContext(), "Collection deleted!", Toast.LENGTH_SHORT).show();
+
                         if (getActivity() instanceof MainActivity) {
-                            ((MainActivity) getActivity()).refreshCollections();
+                            MainActivity mainActivity = (MainActivity) getActivity();
+
+                            // Notify MainActivity about the deletion and handle navigation
+                            String origin = getArguments() != null ? getArguments().getString("origin", "CollectionsFragment") : "CollectionsFragment";
+                            mainActivity.handleCollectionDeletion(collectionId, origin);
                         }
-
-                        // Close the current fragment
-                        navigateBack();
-
-                        Toast.makeText(requireContext(), "Collection deleted successfully!", Toast.LENGTH_SHORT).show();
                     } catch (Exception e) {
                         Log.e(TAG, "Error deleting collection: " + e.getMessage(), e);
                         Toast.makeText(requireContext(), "Failed to delete collection.", Toast.LENGTH_SHORT).show();
@@ -301,6 +308,7 @@ public class CollectionDetailFragment extends Fragment {
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
                 .show();
     }
+
 
 
 
@@ -350,13 +358,12 @@ public class CollectionDetailFragment extends Fragment {
         builder.setPositiveButton("Save", (dialog, which) -> {
             String emoji = input.getText().toString().trim();
             if (isEmoji(emoji)) {
-                // Update the emoji in the database
                 new CollectionsManager(requireContext()).updateCollectionEmoji(collectionId, emoji);
 
-                // Reload the collection details to reflect the updated emoji
+                // Reload local details
                 loadCollectionDetails();
 
-                // Notify the CollectionsFragment about the update
+                // Notify parent fragment
                 if (getActivity() instanceof MainActivity) {
                     ((MainActivity) getActivity()).refreshCollections();
                 }
@@ -371,6 +378,7 @@ public class CollectionDetailFragment extends Fragment {
         builder.show();
     }
 
+
     private boolean isEmoji(String input) {
         if (input == null || input.isEmpty()) {
             return false;
@@ -384,15 +392,30 @@ public class CollectionDetailFragment extends Fragment {
         if (getActivity() instanceof MainActivity) {
             MainActivity mainActivity = (MainActivity) getActivity();
 
-            String originFragment = getArguments() != null ? getArguments().getString("origin", "CollectionsFragment") : "CollectionsFragment";
+            String origin = getArguments() != null ? getArguments().getString("origin", "CollectionsFragment") : "CollectionsFragment";
 
-            if ("ClothingDetailFragment".equals(originFragment)) {
-                mainActivity.navigateBackToClothingDetail(); // Navigate to ClothingDetailFragment
+            if ("ClothingDetailFragment".equals(origin)) {
+                int clothingId = getArguments() != null ? getArguments().getInt("clothing_id", -1) : -1;
+                int collectionId = getArguments() != null ? getArguments().getInt("collection_id", -1) : -1;
+                String collectionName = getArguments() != null ? getArguments().getString("collection_name") : null;
+
+                if (clothingId != -1) {
+                    Log.d(TAG, "Navigating back to ClothingDetailFragment with clothingId: " + clothingId);
+                    mainActivity.openClothingDetail(clothingId, origin, collectionId, collectionName);
+                } else {
+                    Log.e(TAG, "Missing clothing ID for navigation back to ClothingDetailFragment.");
+                }
             } else {
-                mainActivity.navigateBackToCollectionsFragment(); // Navigate to CollectionsFragment
+                mainActivity.navigateBackToCollectionsFragment();
             }
         }
     }
+
+
+
+
+
+
 
 
 }

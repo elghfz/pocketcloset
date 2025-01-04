@@ -130,6 +130,13 @@ public class CollectionAdapter extends RecyclerView.Adapter<CollectionAdapter.Co
         }
     }
 
+    public void updateData(List<Collection> newData) {
+        this.collectionList.clear();
+        this.collectionList.addAll(newData);
+        notifyDataSetChanged();
+    }
+
+
     @Override
     public int getItemCount() {
         return collectionList.size();
