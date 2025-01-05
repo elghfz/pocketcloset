@@ -2,6 +2,8 @@ package com.fz.pocketcloset;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
@@ -12,8 +14,11 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -36,6 +41,7 @@ public class ClothesFragment extends Fragment {
     private final Set<ClothingItem> selectedItems = new HashSet<>();
     private ImageButton deleteButton, addToCollectionButton, addClothesButton;
     private ImagePickerHelper imagePickerHelper;
+    private ActivityResultLauncher<Intent> pickImageLauncher;
     private DatabaseHelper dbHelper;
     private ImageButton filterButton, clearFilterButton;
     private List<ClothingItem> clothingList; // Original, unfiltered list
@@ -64,6 +70,25 @@ public class ClothesFragment extends Fragment {
     }
 
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // Register ActivityResultLauncher
+        pickImageLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == AppCompatActivity.RESULT_OK && result.getData() != null) {
+                        Uri selectedImageUri = result.getData().getData();
+                        if (imagePickerHelper != null) {
+                            imagePickerHelper.handleImageResult(selectedImageUri);
+                        }
+                    }
+                }
+        );
+    }
+
+
 
     @SuppressLint("WrongViewCast")
     @Nullable
@@ -88,15 +113,18 @@ public class ClothesFragment extends Fragment {
             recyclerView = view.findViewById(R.id.recyclerView);
             recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 4));
 
+            // Initialize ImagePickerHelper
             imagePickerHelper = new ImagePickerHelper(
-                    this,
+                    requireContext(),
                     dbHelper,
                     unused -> {
                         clothingList = clothingManager.getAllClothingItems(); // Refresh full list
                         filteredClothingList = new ArrayList<>(clothingList); // Reset filtered list
                         updateAdapterSafely(); // Update adapter
                         updateClearFilterButtonVisibility(Collections.emptySet()); // Reset to no filter
-                    }
+                    },
+                    -1, // Pass -1 for creating a new item
+                    pickImageLauncher // Pass the registered launcher
             );
 
             deleteButton = view.findViewById(R.id.deleteButton);

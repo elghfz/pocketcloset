@@ -1,6 +1,7 @@
 package com.fz.pocketcloset;
 
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,8 +15,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -27,17 +31,40 @@ import java.util.List;
 public class ClothingDetailFragment extends Fragment {
 
     private static final String TAG = "ClothingDetailFragment";
+    private ImagePickerHelper imagePickerHelper;
+    private ActivityResultLauncher<Intent> pickImageLauncher;
     private ImageView clothingImageView;
     private RecyclerView collectionsRecyclerView;
     private int clothingId;
     private String originFragment; // Tracks where the user came from
     private LinearLayout tagsContainer;
+    private View imageOverlay;
+    private ImageButton editImageButton;
+    private View backgroundClickableArea;
 
     private DatabaseHelper dbHelper;
 
     public void onResume() {
         super.onResume();
         reloadData(); // Ensure data is refreshed whenever the fragment becomes active
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // Register ActivityResultLauncher
+        pickImageLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == AppCompatActivity.RESULT_OK && result.getData() != null) {
+                        Uri selectedImageUri = result.getData().getData();
+                        if (imagePickerHelper != null) {
+                            imagePickerHelper.handleImageResult(selectedImageUri);
+                        }
+                    }
+                }
+        );
     }
 
     @Nullable
@@ -53,14 +80,32 @@ public class ClothingDetailFragment extends Fragment {
             tagsContainer = view.findViewById(R.id.tagsContainer);
             clothingImageView = view.findViewById(R.id.clothingImageView);
             collectionsRecyclerView = view.findViewById(R.id.collectionsRecyclerView);
+            imageOverlay = view.findViewById(R.id.imageOverlay);
+            editImageButton = view.findViewById(R.id.editImageButton);
+            backgroundClickableArea = view.findViewById(R.id.backgroundClickableArea);
 
             GridLayoutManager layoutManager = new GridLayoutManager(requireContext(), 3);
             collectionsRecyclerView.setLayoutManager(layoutManager);
+
+            // Initialize ImagePickerHelper
+            imagePickerHelper = new ImagePickerHelper(requireContext(), dbHelper, result -> {
+                // Refresh clothing details after update
+                loadClothingDetails();
+            }, clothingId, pickImageLauncher);
+
+            // Set initial visibility
+            imageOverlay.setVisibility(View.GONE);
+            editImageButton.setVisibility(View.GONE);
 
             // Load clothing details
             loadClothingDetails();
 
             // Set button click listeners
+
+            clothingImageView.setOnClickListener(v -> showEditOptions());
+            editImageButton.setOnClickListener(v -> openImagePicker());
+            backgroundClickableArea.setOnClickListener(v -> hideEditOptions());
+
             ImageButton saveButton = view.findViewById(R.id.button_save);
             saveButton.setOnClickListener(v -> navigateBack());
 
@@ -72,6 +117,8 @@ public class ClothingDetailFragment extends Fragment {
 
             ImageButton deleteButton = view.findViewById(R.id.button_delete_clothing);
             deleteButton.setOnClickListener(v -> deleteClothing());
+
+
 
         } catch (Exception e) {
             Log.e(TAG, "Error initializing ClothingDetailFragment: " + e.getMessage(), e);
@@ -250,6 +297,25 @@ public class ClothingDetailFragment extends Fragment {
 
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
         builder.show();
+    }
+
+    private void showEditOptions() {
+        imageOverlay.setVisibility(View.VISIBLE);
+        editImageButton.setVisibility(View.VISIBLE);
+    }
+
+    private void hideEditOptions() {
+        imageOverlay.setVisibility(View.GONE);
+        editImageButton.setVisibility(View.GONE);
+    }
+
+    private void openImagePicker() {
+        if (imagePickerHelper != null) {
+            imagePickerHelper.openImagePicker();
+
+            // Hide edit options after opening the picker
+            hideEditOptions();
+        }
     }
 
 
