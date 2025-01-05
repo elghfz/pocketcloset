@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -240,9 +241,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-
-
     public void refreshCollections() {
         MainFragmentAdapter adapter = (MainFragmentAdapter) viewPager.getAdapter();
 
@@ -259,10 +257,6 @@ public class MainActivity extends AppCompatActivity {
             Log.e(TAG, "MainFragmentAdapter not initialized.");
         }
     }
-
-
-
-
 
 
     public void navigateBackToClothingDetail() {

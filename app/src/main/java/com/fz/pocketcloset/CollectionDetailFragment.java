@@ -341,6 +341,10 @@ public class CollectionDetailFragment extends Fragment {
             }
             loadClothesInCollection();
             Toast.makeText(requireContext(), "Clothes added!", Toast.LENGTH_SHORT).show();
+            // Refresh collections
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).refreshCollections();
+            }
         });
 
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());

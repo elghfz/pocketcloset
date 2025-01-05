@@ -290,6 +290,7 @@ public class ClothesFragment extends Fragment {
                 checkedItems[i] = (i == which);
             }
         });
+
         builder.setPositiveButton("Add", (dialog, which) -> {
             int selectedCollectionId = -1;
             for (int i = 0; i < checkedItems.length; i++) {
@@ -305,7 +306,12 @@ public class ClothesFragment extends Fragment {
                             .assignClothingToCollection(clothingItem.getId(), selectedCollectionId);
                 }
                 Toast.makeText(requireContext(), "Clothes added to collection!", Toast.LENGTH_SHORT).show();
-                exitSelectionMode(); // Clear selection after action
+                exitSelectionMode();
+
+                // Notify MainActivity to refresh CollectionsFragment
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).refreshCollections();
+                }
             } else {
                 Toast.makeText(requireContext(), "Please select a collection.", Toast.LENGTH_SHORT).show();
             }
@@ -314,6 +320,7 @@ public class ClothesFragment extends Fragment {
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
         builder.show();
     }
+
 
 
     private void showAddClothesDialog() {

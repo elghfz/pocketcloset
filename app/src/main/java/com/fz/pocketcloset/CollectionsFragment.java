@@ -14,6 +14,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -41,7 +42,8 @@ public class CollectionsFragment extends Fragment {
         try {
             DatabaseHelper dbHelper = new DatabaseHelper(requireContext());
             recyclerView = view.findViewById(R.id.collectionRecyclerView);
-            recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+            recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 3));
+
 
             addCollectionButton = view.findViewById(R.id.addCollectionButton);
             deleteButton = view.findViewById(R.id.deleteButton);

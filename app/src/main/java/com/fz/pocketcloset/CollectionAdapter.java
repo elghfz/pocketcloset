@@ -2,11 +2,13 @@ package com.fz.pocketcloset;
 
 import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
 
+import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -36,7 +38,6 @@ public class CollectionAdapter extends RecyclerView.Adapter<CollectionAdapter.Co
     public interface EmojiClickListener {
         void onEmojiClicked(Collection collection);
     }
-
 
     public CollectionAdapter(
             List<Collection> collectionList,
@@ -69,16 +70,33 @@ public class CollectionAdapter extends RecyclerView.Adapter<CollectionAdapter.Co
         Collection collection = collectionList.get(position);
         Log.d(TAG, "Binding collection: " + collection.getName() + " (" + collection.getEmoji() + ")");
 
+        // Set collection name and emoji
         holder.collectionName.setText(collection.getName());
         holder.emojiView.setText(collection.getEmoji());
 
-        // Trigger the callback for emoji click
+        // Populate the preview grid
+        List<ClothingItem> previewItems = new CollectionsManager(holder.itemView.getContext())
+                .getClothesInCollection(collection.getId());
+
+        for (int i = 0; i < holder.previewImages.length; i++) {
+            if (i < previewItems.size()) {
+                ClothingItem item = previewItems.get(i);
+                holder.previewImages[i].setImageURI(Uri.parse(item.getImagePath()));
+                holder.previewImages[i].setVisibility(View.VISIBLE);
+            } else {
+                holder.previewImages[i].setImageResource(R.drawable.placeholder_clothing_item); // Default placeholder
+                holder.previewImages[i].setVisibility(View.VISIBLE);
+            }
+        }
+
+        // Handle emoji click
         holder.emojiView.setOnClickListener(v -> {
             if (emojiClickListener != null) {
                 emojiClickListener.onEmojiClicked(collection);
             }
         });
 
+        // Handle item click
         holder.itemView.setOnClickListener(v -> {
             if (!selectionMode) {
                 onItemClickListener.onItemClick(collection);
@@ -87,6 +105,7 @@ public class CollectionAdapter extends RecyclerView.Adapter<CollectionAdapter.Co
             }
         });
 
+        // Handle long click
         holder.itemView.setOnLongClickListener(v -> {
             if (!selectionMode) {
                 selectionMode = true;
@@ -97,7 +116,7 @@ public class CollectionAdapter extends RecyclerView.Adapter<CollectionAdapter.Co
             return true;
         });
 
-        // Manage checkbox visibility and state
+        // Handle checkbox visibility and state
         if (selectionMode) {
             holder.selectCheckbox.setVisibility(View.VISIBLE);
             holder.selectCheckbox.setChecked(selectedItems.contains(collection));
@@ -136,7 +155,6 @@ public class CollectionAdapter extends RecyclerView.Adapter<CollectionAdapter.Co
         notifyDataSetChanged();
     }
 
-
     @Override
     public int getItemCount() {
         return collectionList.size();
@@ -146,12 +164,17 @@ public class CollectionAdapter extends RecyclerView.Adapter<CollectionAdapter.Co
         TextView collectionName;
         CheckBox selectCheckbox;
         TextView emojiView;
+        ImageView[] previewImages = new ImageView[4];
 
         public CollectionViewHolder(@NonNull View itemView) {
             super(itemView);
             collectionName = itemView.findViewById(R.id.collectionName);
             selectCheckbox = itemView.findViewById(R.id.collectionCheckbox);
-            emojiView = itemView.findViewById(R.id.emojiView);
+            emojiView = itemView.findViewById(R.id.collectionEmoji);
+            previewImages[0] = itemView.findViewById(R.id.previewItem1);
+            previewImages[1] = itemView.findViewById(R.id.previewItem2);
+            previewImages[2] = itemView.findViewById(R.id.previewItem3);
+            previewImages[3] = itemView.findViewById(R.id.previewItem4);
         }
     }
 }
