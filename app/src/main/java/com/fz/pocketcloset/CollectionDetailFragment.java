@@ -36,7 +36,7 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
     private int collectionId;
     private String collectionName;
     private String collectionEmoji;
-    private ImageButton renameButton, addClothesButton, removeFromCollectionButton, closeButton, deleteButton;
+    private ImageButton addClothesButton, removeFromCollectionButton, closeButton, deleteButton;
 
     private boolean isSelectionMode = false;
     private final Set<ClothingItem> selectedItems = new HashSet<>();
@@ -82,13 +82,12 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
             collectionNameTextView = view.findViewById(R.id.textViewCollectionName);
             emojiTextView = view.findViewById(R.id.emojiView);
 
-            renameButton = view.findViewById(R.id.button_rename_collection);
             addClothesButton = view.findViewById(R.id.button_add_clothes_to_collection);
             removeFromCollectionButton = view.findViewById(R.id.button_remove_from_collection);
             deleteButton = view.findViewById(R.id.deleteButton);
             closeButton = view.findViewById(R.id.button_close_collection);
 
-            renameButton.setOnClickListener(v -> showRenameDialog());
+            collectionNameTextView.setOnClickListener(v -> showRenameDialog());
             addClothesButton.setOnClickListener(v -> showAddClothesFragment());
             removeFromCollectionButton.setOnClickListener(v -> removeSelectedFromCollection());
             closeButton.setOnClickListener(v -> navigateBack());
@@ -210,12 +209,10 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
 
     private void updateButtonVisibility() {
         if (isSelectionMode) {
-            renameButton.setVisibility(View.GONE);
             addClothesButton.setVisibility(View.GONE);
             deleteButton.setVisibility(View.GONE);
             removeFromCollectionButton.setVisibility(View.VISIBLE);
         } else {
-            renameButton.setVisibility(View.VISIBLE);
             addClothesButton.setVisibility(View.VISIBLE);
             deleteButton.setVisibility(View.VISIBLE);
             removeFromCollectionButton.setVisibility(View.GONE);

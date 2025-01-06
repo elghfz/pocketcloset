@@ -154,7 +154,6 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
     // ViewHolder class for binding views
     static class ClothingViewHolder extends RecyclerView.ViewHolder {
         ImageView imageView;
-        TextView tagsTextView;
         CheckBox selectCheckbox;
 
         public ClothingViewHolder(@NonNull View itemView) {

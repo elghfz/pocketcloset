@@ -83,7 +83,10 @@
                     android:text="🏷️ "
                     android:textStyle="bold"
                     android:layout_marginEnd="8dp"
-                    android:textSize="30sp" />
+                    android:textSize="30sp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
 
                 <LinearLayout
                     android:id="@+id/tagsContainer"
@@ -144,17 +147,6 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center">
-
-                <!-- Edit Button -->
-                <ImageButton
-                    android:id="@+id/button_edit_clothing"
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
-                    android:background="@drawable/circular_button"
-                    android:src="@drawable/edit_icon"
-                    android:scaleType="centerInside"
-                    android:layout_marginEnd="8dp"
-                    android:contentDescription="Edit Tags" />
 
                 <!-- Add to Collection Button -->
                 <ImageButton

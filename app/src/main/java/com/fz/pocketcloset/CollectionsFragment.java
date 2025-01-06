@@ -33,7 +33,6 @@ public class CollectionsFragment extends Fragment {
     private final Set<Collection> selectedItems = new HashSet<>();
 
 
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -73,7 +72,7 @@ public class CollectionsFragment extends Fragment {
                         this::handleItemClick,
                         this::handleItemLongClick,
                         isSelectionMode,
-                        this::updateEmoji
+                        null
                 );
                 recyclerView.setAdapter(adapter);
             } else {
@@ -84,35 +83,6 @@ public class CollectionsFragment extends Fragment {
             Log.e(TAG, "Error loading collections: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Error loading collections.", Toast.LENGTH_SHORT).show();
         }
-    }
-
-
-    private void updateEmoji(Collection collection) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Update Emoji");
-
-        final EditText input = new EditText(requireContext());
-        input.setHint("Enter an emoji");
-        builder.setView(input);
-
-        builder.setPositiveButton("Update", (dialog, which) -> {
-            String newEmoji = input.getText().toString().trim();
-
-            if (isValidEmoji(newEmoji)) {
-                // Update the collection's emoji in the database
-                new CollectionsManager(requireContext()).updateCollectionEmoji(collection.getId(), newEmoji);
-
-                // Refresh the collections list
-                loadCollections(); // Refreshes the RecyclerView with the updated emoji
-
-                Toast.makeText(requireContext(), "Emoji updated successfully!", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(requireContext(), "Invalid emoji. Please try again.", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-        builder.show();
     }
 
 
@@ -198,17 +168,6 @@ public class CollectionsFragment extends Fragment {
         builder.show();
     }
 
-
-    private boolean isValidEmoji(String input) {
-        if (input == null || input.isEmpty()) {
-            return false;
-        }
-
-        // Emoji typically consists of a single Unicode code point
-        int codePoint = input.codePointAt(0);
-        return input.length() == Character.charCount(codePoint) &&
-                Character.isSupplementaryCodePoint(codePoint);
-    }
 
     public void reloadData() {
         loadCollections();

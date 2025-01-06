@@ -113,8 +113,9 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
             ImageButton saveButton = view.findViewById(R.id.button_save);
             saveButton.setOnClickListener(v -> navigateBack());
 
-            ImageButton editButton = view.findViewById(R.id.button_edit_clothing);
-            editButton.setOnClickListener(v -> showEditTagsDialog());
+            TextView tagsLabel = view.findViewById(R.id.tagsLabel);
+            tagsLabel.setOnClickListener(v -> showEditTagsDialog());
+
 
             ImageButton addToCollectionButton = view.findViewById(R.id.button_add_to_collection);
             addToCollectionButton.setOnClickListener(v -> showAddToCollectionFragment());
