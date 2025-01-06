@@ -78,7 +78,7 @@ public class SelectionFragment extends Fragment {
         RecyclerView recyclerView = view.findViewById(R.id.selectionRecyclerView);
 
         // Set GridLayoutManager with span count as 4
-        GridLayoutManager layoutManager = new GridLayoutManager(requireContext(), 12);
+        GridLayoutManager layoutManager = new GridLayoutManager(requireContext(), 3);
         recyclerView.setLayoutManager(layoutManager);
 
         if (items != null && selectedItems != null) {
@@ -86,18 +86,6 @@ public class SelectionFragment extends Fragment {
             recyclerView.setAdapter(adapter);
             Log.d(TAG, "Adapter initialized and set to RecyclerView.");
 
-        // Set SpanSizeLookup for dynamic span handling
-            layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
-                @Override
-                public int getSpanSize(int position) {
-                    // If the item is a Collection, span 4 columns (to fit 3 per row)
-                    if (items.get(position) instanceof Collection) {
-                        return 4; // 12 / 4 = 3 collections per row
-                    } else {
-                        return 3; // 12 / 3 = 4 clothing items per row
-                    }
-                }
-            });
         } else {
             Log.e(TAG, "Items or selectedItems not initialized.");
         }

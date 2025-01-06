@@ -275,6 +275,13 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
             }
 
             Toast.makeText(requireContext(), "Tags updated!", Toast.LENGTH_SHORT).show();
+
+            if (getActivity() instanceof MainActivity) {
+                MainActivity mainActivity = (MainActivity) getActivity();
+                mainActivity.refreshClothingList();
+            }
+
+
         } catch (Exception e) {
             Log.e(TAG, "Error updating clothing tags: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Failed to update tags.", Toast.LENGTH_SHORT).show();

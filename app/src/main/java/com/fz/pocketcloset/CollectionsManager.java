@@ -267,4 +267,24 @@ public class CollectionsManager {
 
         return availableCollections;
     }
+
+    public void updateCollectionName(int collectionId, String newName) {
+        try {
+            SQLiteDatabase db = dbHelper.getWritableDatabase();
+            ContentValues values = new ContentValues();
+            values.put("name", newName);
+
+            int rowsUpdated = db.update("Collections", values, "id = ?", new String[]{String.valueOf(collectionId)});
+            db.close();
+
+            if (rowsUpdated > 0) {
+                Log.d(TAG, "Collection name updated successfully for ID: " + collectionId);
+            } else {
+                Log.d(TAG, "No collection found with ID: " + collectionId);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error updating collection name: " + e.getMessage(), e);
+        }
+    }
+
 }

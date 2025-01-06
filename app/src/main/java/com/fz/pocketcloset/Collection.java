@@ -9,7 +9,7 @@ import java.util.List;
 
 public class Collection implements SelectableItem {
     private final int id;
-    private final String name;
+    private String name;
     private String emoji;
     private boolean isSelected; // Selection state
     private ArrayList<Uri> previewImages; // List of URIs for preview
@@ -123,5 +123,9 @@ public class Collection implements SelectableItem {
         dest.writeString(name);
         dest.writeString(emoji);
         dest.writeTypedList(previewImages);
+    }
+
+    public void setName(String updatedName) {
+        this.name = updatedName;
     }
 }

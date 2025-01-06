@@ -120,7 +120,7 @@ public class ClothesFragment extends Fragment implements SelectionFragment.Selec
             dbHelper = new DatabaseHelper(requireContext());
 
             recyclerView = view.findViewById(R.id.recyclerView);
-            recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 4));
+            recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 3));
 
             // Initialize ImagePickerHelper
             imagePickerHelper = new ImagePickerHelper(
@@ -204,26 +204,25 @@ public class ClothesFragment extends Fragment implements SelectionFragment.Selec
 
 
     private void handleItemClick(ClothingItem item) {
+        Log.d(TAG, "handleItemClick: isSelectionMode=" + isSelectionMode + ", item=" + item);
         if (isSelectionMode) {
             toggleItemSelection(item);
         } else {
             if (getActivity() instanceof MainActivity) {
                 MainActivity mainActivity = (MainActivity) getActivity();
-
-                // Call openClothingDetail with null values for collectionId and collectionName
                 mainActivity.openClothingDetail(
-                        item.getId(),            // clothingId
-                        "ClothesFragment",       // originTag
-                        -1,                      // collectionId (not applicable, set to -1)
-                        null                     // collectionName (not applicable, set to null)
+                        item.getId(),
+                        "ClothesFragment",
+                        -1,
+                        null
                 );
             }
         }
     }
 
 
-
     private void handleItemLongClick(ClothingItem item) {
+        Log.d(TAG, "handleItemLongClick: isSelectionMode=" + isSelectionMode + ", item=" + item);
         if (item == null) {
             exitSelectionMode();
             return;
@@ -236,6 +235,7 @@ public class ClothesFragment extends Fragment implements SelectionFragment.Selec
     }
 
     private void toggleItemSelection(ClothingItem item) {
+        Log.d(TAG, "toggleItemSelection: item=" + item + ", isSelectionMode=" + isSelectionMode);
         if (selectedItems.contains(item)) {
             selectedItems.remove(item);
         } else {
@@ -243,6 +243,7 @@ public class ClothesFragment extends Fragment implements SelectionFragment.Selec
         }
 
         if (selectedItems.isEmpty() && isSelectionMode) {
+            Log.d(TAG, "toggleItemSelection: No items selected. Exiting selection mode.");
             exitSelectionMode();
         }
 
@@ -250,6 +251,7 @@ public class ClothesFragment extends Fragment implements SelectionFragment.Selec
     }
 
     private void exitSelectionMode() {
+        Log.d(TAG, "exitSelectionMode: Clearing selection state and resetting UI.");
         isSelectionMode = false;
         selectedItems.clear();
 
@@ -564,6 +566,7 @@ public class ClothesFragment extends Fragment implements SelectionFragment.Selec
 
 
     private void updateButtonVisibility() {
+        Log.d(TAG, "updateButtonVisibility: isSelectionMode=" + isSelectionMode);
         if (isSelectionMode) {
             deleteButton.setVisibility(View.VISIBLE);
             addToCollectionButton.setVisibility(View.VISIBLE);

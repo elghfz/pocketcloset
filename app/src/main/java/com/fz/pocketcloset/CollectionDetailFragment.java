@@ -1,7 +1,9 @@
 package com.fz.pocketcloset;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -9,6 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -28,7 +31,7 @@ import java.util.Set;
 public class CollectionDetailFragment extends Fragment implements SelectionFragment.SelectionListener {
 
     private static final String TAG = "CollectionDetailFragment";
-    private TextView collectionNameTextView;
+    private EditText editCollectionName;
     private TextView emojiTextView;
     private RecyclerView recyclerView;
     private ClothingAdapter adapter;
@@ -57,7 +60,7 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
                 collectionName = collection.getName();
                 collectionEmoji = collection.getEmoji();
 
-                collectionNameTextView.setText(collectionName);
+                editCollectionName.setText(collectionName);
                 emojiTextView.setText(collectionEmoji);
             }
         } catch (Exception e) {
@@ -66,6 +69,7 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_collection_detail, container, false);
@@ -79,7 +83,7 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
             recyclerView = view.findViewById(R.id.recyclerView);
             recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 4));
 
-            collectionNameTextView = view.findViewById(R.id.textViewCollectionName);
+            editCollectionName = view.findViewById(R.id.editCollectionName);
             emojiTextView = view.findViewById(R.id.emojiView);
 
             addClothesButton = view.findViewById(R.id.button_add_clothes_to_collection);
@@ -87,7 +91,36 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
             deleteButton = view.findViewById(R.id.deleteButton);
             closeButton = view.findViewById(R.id.button_close_collection);
 
-            collectionNameTextView.setOnClickListener(v -> showRenameDialog());
+            // Listener to handle renaming when focus changes
+            editCollectionName.setOnFocusChangeListener((v, hasFocus) -> {
+                if (!hasFocus) {
+                    String newName = editCollectionName.getText().toString().trim();
+                    if (!newName.isEmpty() && !newName.equals(collectionName)) {
+                        renameCollection(newName);
+                    }
+                    hideKeyboard(editCollectionName);
+                }
+            });
+
+            // Optional: Handle "Done" action on the keyboard
+            editCollectionName.setOnEditorActionListener((v, actionId, event) -> {
+                String newName = editCollectionName.getText().toString().trim();
+                if (!newName.isEmpty() && !newName.equals(collectionName)) {
+                    renameCollection(newName);
+                    editCollectionName.clearFocus(); // Dismiss keyboard
+                    hideKeyboard(editCollectionName);
+                }
+                return false; // Let the event propagate
+            });
+
+            // Clear focus when touching outside the EditText
+            View parentLayout = view.findViewById(R.id.parentLayout);
+            parentLayout.setOnTouchListener((v, event) -> {
+                editCollectionName.clearFocus();
+                hideKeyboard(editCollectionName);
+                return false;
+            });
+
             addClothesButton.setOnClickListener(v -> showAddClothesFragment());
             removeFromCollectionButton.setOnClickListener(v -> removeSelectedFromCollection());
             closeButton.setOnClickListener(v -> navigateBack());
@@ -106,6 +139,7 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
 
         return view;
     }
+
 
 
     public void reloadData() {
@@ -230,27 +264,6 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
     }
 
 
-    private void showRenameDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Rename Collection");
-
-        final EditText input = new EditText(requireContext());
-        input.setText(collectionName); // Pre-fill with the current name
-        input.setHint("Enter a new name");
-        builder.setView(input);
-
-        builder.setPositiveButton("Save", (dialog, which) -> {
-            String newName = input.getText().toString().trim();
-            if (!newName.isEmpty()) {
-                renameCollection(newName);
-            } else {
-                Toast.makeText(requireContext(), "Name cannot be empty!", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-        builder.show();
-    }
 
     private void renameCollection(String newName) {
         try {
@@ -262,7 +275,7 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
 
             if (rowsAffected > 0) {
                 collectionName = newName;
-                collectionNameTextView.setText(newName);
+                editCollectionName.setText(newName);
 
                 // Notify parent fragment
                 if (getActivity() instanceof MainActivity) {
@@ -527,6 +540,16 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
 
 
 
+    private void hideKeyboard(View view) {
+        try {
+            InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error hiding keyboard: " + e.getMessage(), e);
+        }
+    }
 
 
 
