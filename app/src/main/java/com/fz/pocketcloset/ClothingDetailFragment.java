@@ -57,19 +57,33 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Get clothingId from arguments or saved instance state
+        int clothingId = requireArguments().getInt("clothing_id", -1);
+
+        // Initialize ImagePickerHelper with the clothingId for updating images
+        imagePickerHelper = new ImagePickerHelper(
+                requireContext(),
+                new DatabaseHelper(requireContext()),
+                unused -> {
+                    // Refresh the fragment data after updating the image
+                    loadClothingDetails();
+                },
+                clothingId,
+                pickImageLauncher // The launcher will be registered next
+        );
+
         // Register ActivityResultLauncher
         pickImageLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == AppCompatActivity.RESULT_OK && result.getData() != null) {
-                        Uri selectedImageUri = result.getData().getData();
-                        if (imagePickerHelper != null) {
-                            imagePickerHelper.handleImageResult(selectedImageUri);
-                        }
+                        // Handle image result using ImagePickerHelper
+                        imagePickerHelper.handleImageResult(result.getData());
                     }
                 }
         );
     }
+
 
     @Nullable
     @Override

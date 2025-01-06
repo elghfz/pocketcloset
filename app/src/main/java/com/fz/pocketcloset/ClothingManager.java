@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -17,6 +18,46 @@ public class ClothingManager {
 
     public ClothingManager(Context context) {
         dbHelper = new DatabaseHelper(context);
+    }
+
+    /**
+     * Add multiple clothing items to the database.
+     *
+     * @param imageUris List of image URIs to be saved.
+     * @param tags List of tags corresponding to each URI.
+     * @param context The context required for file storage.
+     */
+    public void addMultipleClothingItems(List<Uri> imageUris, List<String> tags, Context context) {
+        if (imageUris.size() != tags.size()) {
+            Log.e(TAG, "Mismatch between image URIs and tags count.");
+            return;
+        }
+
+        try (SQLiteDatabase db = dbHelper.getWritableDatabase()) {
+            db.beginTransaction();
+            try {
+                for (int i = 0; i < imageUris.size(); i++) {
+                    Uri imageUri = imageUris.get(i);
+                    String tag = tags.get(i);
+                    String imagePath = ImagePickerHelper.copyImageToPrivateStorage(context, imageUri);
+
+                    if (imagePath != null) {
+                        ContentValues values = new ContentValues();
+                        values.put("imagePath", imagePath);
+                        values.put("tags", tag);
+
+                        db.insert("Clothes", null, values);
+                    } else {
+                        Log.e(TAG, "Failed to save image for URI: " + imageUri.toString());
+                    }
+                }
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error adding multiple clothing items: " + e.getMessage(), e);
+        }
     }
 
     /**

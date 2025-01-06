@@ -82,12 +82,18 @@ public class ClothesFragment extends Fragment implements SelectionFragment.Selec
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == AppCompatActivity.RESULT_OK && result.getData() != null) {
-                        Uri selectedImageUri = result.getData().getData();
-                        if (imagePickerHelper != null) {
-                            imagePickerHelper.handleImageResult(selectedImageUri);
-                        }
+                        imagePickerHelper.handleImageResult(result.getData());
                     }
                 }
+        );
+
+        // Initialize ImagePickerHelper
+        imagePickerHelper = new ImagePickerHelper(
+                requireContext(),
+                new DatabaseHelper(requireContext()),
+                unused -> reloadData(), // Refresh RecyclerView after adding clothes
+                -1, // -1 indicates new clothing items
+                pickImageLauncher
         );
     }
 
@@ -139,7 +145,7 @@ public class ClothesFragment extends Fragment implements SelectionFragment.Selec
             // Set up button listeners
             deleteButton.setOnClickListener(v -> deleteSelectedItems());
             addToCollectionButton.setOnClickListener(v -> showAddClothesToCollectionFragment());
-            addClothesButton.setOnClickListener(v -> showAddClothesDialog());
+            addClothesButton.setOnClickListener(v -> imagePickerHelper.openImagePicker());
             filterButton.setOnClickListener(v -> showFilterDialog());
             clearFilterButton.setOnClickListener(v -> clearFilter());
 
@@ -446,17 +452,6 @@ public class ClothesFragment extends Fragment implements SelectionFragment.Selec
         getParentFragmentManager().popBackStack(); // Remove SelectionFragment from back stack
         exitSelectionMode();
     }
-
-
-
-    private void showAddClothesDialog() {
-        if (imagePickerHelper != null) {
-            imagePickerHelper.openImagePicker();
-        } else {
-            Log.e(TAG, "ImagePickerHelper is null. Cannot open image picker.");
-        }
-    }
-
     private void showFilterDialog() {
         try {
             List<String> tags = clothingManager.getAllTags();

@@ -16,13 +16,12 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class ImagePickerHelper {
@@ -32,9 +31,7 @@ public class ImagePickerHelper {
     private final Context context;
     private final DatabaseHelper dbHelper;
     private final Consumer<Void> onClothingAdded;
-    private final int clothingId; // -1 for new items, > 0 for updating existing items
-
-    private Uri selectedImageUri;
+    private final int clothingId; // -1 for new items, > 0 for updating an existing item
 
     private final ActivityResultLauncher<Intent> pickImageLauncher;
 
@@ -49,54 +46,74 @@ public class ImagePickerHelper {
     public void openImagePicker() {
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType("image/*");
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true); // Enable multiple image selection
         pickImageLauncher.launch(intent);
     }
 
-    public void handleImageResult(Uri selectedImageUri) {
-        if (selectedImageUri != null) {
-            if (clothingId > 0) {
-                updateClothingImage(selectedImageUri);
+    public void handleImageResult(Intent data) {
+        if (data == null) return;
+
+        if (clothingId > 0) {
+            // Update logic for an existing clothing item
+            if (data.getData() != null) {
+                updateClothingImage(data.getData());
             } else {
-                // Show dialog for adding new item
-                showAddClothingDetailsDialog(selectedImageUri);
+                Toast.makeText(context, "No image selected for update.", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            // Handle adding multiple or single new items
+            List<Uri> imageUris = new ArrayList<>();
+            if (data.getClipData() != null) {
+                int count = data.getClipData().getItemCount();
+                for (int i = 0; i < count; i++) {
+                    imageUris.add(data.getClipData().getItemAt(i).getUri());
+                }
+            } else if (data.getData() != null) {
+                imageUris.add(data.getData());
+            }
+
+            if (!imageUris.isEmpty()) {
+                handleMultipleImages(imageUris);
+            } else {
+                Toast.makeText(context, "No images selected.", Toast.LENGTH_SHORT).show();
             }
         }
     }
 
-    private void showAddClothingDetailsDialog(Uri selectedImageUri) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("Add Clothing Item");
 
-        View dialogView = ((MainActivity) context).getLayoutInflater().inflate(R.layout.dialog_add_clothes, null);
-        EditText inputTags = dialogView.findViewById(R.id.input_tags);
+    private void handleMultipleImages(List<Uri> imageUris) {
+        if (imageUris.isEmpty()) {
+            Toast.makeText(context, "No images selected.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        builder.setView(dialogView);
+        // Ensure the context is an instance of AppCompatActivity
+        if (context instanceof AppCompatActivity) {
+            AppCompatActivity activity = (AppCompatActivity) context;
 
-        builder.setPositiveButton("Save", (dialog, which) -> {
-            String tags = inputTags.getText().toString();
+            // Replace the fragment using the activity's FragmentManager
+            AddClothesFragment fragment = AddClothesFragment.newInstance(imageUris);
+            activity.getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.dynamic_fragment_container, fragment, "AddClothesFragment")
+                    .addToBackStack(null)
+                    .commit();
 
-            if (selectedImageUri != null) {
-                String privateImagePath = copyImageToPrivateStorage(selectedImageUri);
-                if (privateImagePath != null) {
-                    saveClothingItem(tags, privateImagePath);
-                    onClothingAdded.accept(null);
-                    Toast.makeText(context, "Clothing item added successfully!", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(context, "Failed to save image. Please try again.", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Toast.makeText(context, "Image is required.", Toast.LENGTH_SHORT).show();
+            // Make the container visible if it's part of the current activity's layout
+            View container = activity.findViewById(R.id.dynamic_fragment_container);
+            if (container != null) {
+                container.setVisibility(View.VISIBLE);
             }
-        });
-
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-        builder.show();
+        } else {
+            Log.e(TAG, "Context is not an instance of AppCompatActivity. Cannot handle multiple images.");
+        }
     }
 
 
     private void updateClothingImage(Uri selectedImageUri) {
         if (selectedImageUri != null) {
-            String privateImagePath = copyImageToPrivateStorage(selectedImageUri);
+            // Pass the context explicitly to the copyImageToPrivateStorage method
+            String privateImagePath = ImagePickerHelper.copyImageToPrivateStorage(context, selectedImageUri);
             if (privateImagePath != null) {
                 try (SQLiteDatabase db = dbHelper.getWritableDatabase()) {
                     ContentValues values = new ContentValues();
@@ -122,7 +139,7 @@ public class ImagePickerHelper {
     }
 
 
-    private String copyImageToPrivateStorage(Uri sourceUri) {
+    public static String copyImageToPrivateStorage(Context context, Uri sourceUri) {
         try {
             String fileName = "clothing_" + System.currentTimeMillis() + ".png";
             File privateDir = context.getFilesDir();
@@ -143,7 +160,8 @@ public class ImagePickerHelper {
         }
     }
 
-    private Bitmap addImageOnTransparentSquare(Bitmap sourceBitmap) {
+
+    static Bitmap addImageOnTransparentSquare(Bitmap sourceBitmap) {
         int squareSize = Math.max(sourceBitmap.getWidth(), sourceBitmap.getHeight());
         Bitmap outputBitmap = Bitmap.createBitmap(squareSize, squareSize, Bitmap.Config.ARGB_8888);
 

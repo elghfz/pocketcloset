@@ -3,7 +3,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="10dp">
+
+    <!-- Dynamic Fragment Container -->
+    <FrameLayout
+        android:id="@+id/dynamic_fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
 
     <!-- Selection Fragment Container -->
     <FrameLayout
