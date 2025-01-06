@@ -3,7 +3,20 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="56dp">
+    android:padding="16dp">
+
+    <!-- Selection Fragment Container -->
+    <FrameLayout
+        android:id="@+id/selection_fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:elevation="0dp" />
+
+    <!-- Space at the top -->
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="120dp" />
 
     <!-- Centered Title with Emoji and Name -->
     <LinearLayout
@@ -29,8 +42,8 @@
             android:id="@+id/textViewCollectionName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="38sp"
-            android:textColor="?android:textColorPrimary"
+            android:textSize="30sp"
+            android:text="Collection Name"
             android:layout_marginTop="18dp"
             android:gravity="center" />
     </LinearLayout>

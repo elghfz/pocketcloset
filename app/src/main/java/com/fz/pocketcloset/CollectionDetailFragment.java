@@ -2,6 +2,7 @@ package com.fz.pocketcloset;
 
 import android.app.AlertDialog;
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,11 +20,12 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class CollectionDetailFragment extends Fragment {
+public class CollectionDetailFragment extends Fragment implements SelectionFragment.SelectionListener {
 
     private static final String TAG = "CollectionDetailFragment";
     private TextView collectionNameTextView;
@@ -87,7 +89,7 @@ public class CollectionDetailFragment extends Fragment {
             closeButton = view.findViewById(R.id.button_close_collection);
 
             renameButton.setOnClickListener(v -> showRenameDialog());
-            addClothesButton.setOnClickListener(v -> showAddClothesDialog());
+            addClothesButton.setOnClickListener(v -> showAddClothesFragment());
             removeFromCollectionButton.setOnClickListener(v -> removeSelectedFromCollection());
             closeButton.setOnClickListener(v -> navigateBack());
             emojiTextView.setOnClickListener(v -> updateEmoji());
@@ -310,46 +312,156 @@ public class CollectionDetailFragment extends Fragment {
     }
 
 
-
-
-
-    private void showAddClothesDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Add Clothes to Collection");
-
+    private void showAddClothesFragment() {
         List<ClothingItem> availableClothes = new CollectionsManager(requireContext())
                 .getAvailableClothesForCollection(collectionId);
 
-        String[] clothingNames = new String[availableClothes.size()];
-        boolean[] checkedItems = new boolean[availableClothes.size()];
-
-        for (int i = 0; i < availableClothes.size(); i++) {
-            clothingNames[i] = availableClothes.get(i).getTags();
-            checkedItems[i] = false;
+        if (availableClothes.isEmpty()) {
+            Toast.makeText(requireContext(), "No clothes available to add.", Toast.LENGTH_SHORT).show();
+            return;
         }
 
-        builder.setMultiChoiceItems(clothingNames, checkedItems, (dialog, which, isChecked) -> {
-            checkedItems[which] = isChecked;
-        });
+        // Convert clothing items to SelectableItem and create selection state
+        List<SelectableItem> clothingItems = new ArrayList<>(availableClothes);
+        boolean[] selectedItems = new boolean[availableClothes.size()];
 
-        builder.setPositiveButton("Add", (dialog, which) -> {
-            for (int i = 0; i < availableClothes.size(); i++) {
-                if (checkedItems[i]) {
-                    new CollectionsManager(requireContext())
-                            .assignClothingToCollection(availableClothes.get(i).getId(), collectionId);
+        SelectionFragment fragment = SelectionFragment.newInstance(
+                "Add Clothes to Collection",
+                clothingItems,
+                selectedItems
+        );
+
+        getChildFragmentManager().beginTransaction()
+                .replace(R.id.selection_fragment_container, fragment, "SelectionFragment")
+                .addToBackStack(null)
+                .commit();
+
+        if (getView() != null) {
+            getView().findViewById(R.id.selection_fragment_container).setVisibility(View.VISIBLE);
+        }
+    }
+
+    @Override
+    public void onSelectionSaved(boolean[] selectedItems) {
+        try {
+            boolean anySelected = false;
+
+            // Check if any item is selected
+            for (boolean isSelected : selectedItems) {
+                if (isSelected) {
+                    anySelected = true;
+                    break;
                 }
             }
+
+            // Show toast and exit if no item is selected
+            if (!anySelected) {
+                Toast.makeText(requireContext(), "No items selected.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Fetch available clothes for the collection
+            List<ClothingItem> availableClothes = new CollectionsManager(requireContext())
+                    .getAvailableClothesForCollection(collectionId);
+
+            if (availableClothes == null || availableClothes.isEmpty()) {
+                Toast.makeText(requireContext(), "No clothes available to add.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            SQLiteDatabase db = new DatabaseHelper(requireContext()).getWritableDatabase();
+            db.beginTransaction(); // Begin transaction for consistency
+
+            try {
+                // Iterate over the selected items
+                for (int i = 0; i < selectedItems.length; i++) {
+                    if (selectedItems[i]) {
+                        ClothingItem clothingItem = availableClothes.get(i);
+
+                        // Check if already assigned to avoid duplicates
+                        if (!isClothingAlreadyAssigned(clothingItem.getId(), collectionId, db)) {
+                            ContentValues values = new ContentValues();
+                            values.put("clothes_id", clothingItem.getId());
+                            values.put("collection_id", collectionId);
+                            db.insert("Clothes_Collections", null, values);
+
+                            Log.d(TAG, "Assigned clothing ID: " + clothingItem.getId() + " to collection ID: " + collectionId);
+                        } else {
+                            Log.d(TAG, "Skipping duplicate assignment: clothing ID: " + clothingItem.getId());
+                        }
+                    }
+                }
+
+                db.setTransactionSuccessful(); // Mark transaction as successful
+            } finally {
+                db.endTransaction(); // End the transaction
+            }
+
+            // Refresh the UI
             loadClothesInCollection();
-            Toast.makeText(requireContext(), "Clothes added!", Toast.LENGTH_SHORT).show();
-            // Refresh collections
+            Toast.makeText(requireContext(), "Clothes added successfully!", Toast.LENGTH_SHORT).show();
+
             if (getActivity() instanceof MainActivity) {
                 ((MainActivity) getActivity()).refreshCollections();
             }
-        });
 
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-        builder.show();
+            hideSelectionFragment(); // Restore main content visibility
+        } catch (Exception e) {
+            Log.e(TAG, "Error adding clothes to collection: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "An error occurred while adding clothes.", Toast.LENGTH_SHORT).show();
+        }
     }
+
+    private boolean isClothingAlreadyAssigned(int clothingId, int collectionId, SQLiteDatabase db) {
+        boolean exists = false;
+        try {
+            String query = "SELECT COUNT(*) FROM Clothes_Collections WHERE clothes_id = ? AND collection_id = ?";
+            Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(clothingId), String.valueOf(collectionId)});
+
+            if (cursor.moveToFirst()) {
+                exists = cursor.getInt(0) > 0;
+            }
+
+            cursor.close();
+        } catch (Exception e) {
+            Log.e(TAG, "Error checking clothing assignment: " + e.getMessage(), e);
+        }
+        return exists;
+    }
+
+
+    @Override
+    public void onSelectionCancelled() {
+        Toast.makeText(requireContext(), "Selection cancelled.", Toast.LENGTH_SHORT).show();
+        hideSelectionFragment();
+    }
+
+    private void hideSelectionFragment() {
+
+        // Attempt to clear selections if the adapter is available
+        Fragment fragment = getChildFragmentManager().findFragmentByTag("SelectionFragment");
+        if (fragment != null && fragment.getView() != null) {
+            RecyclerView recyclerView = fragment.getView().findViewById(R.id.selectionRecyclerView);
+            if (recyclerView != null && recyclerView.getAdapter() instanceof SelectionAdapter) {
+                SelectionAdapter adapter = (SelectionAdapter) recyclerView.getAdapter();
+                adapter.clearSelections(); // Clear all selected items
+            }
+        }
+
+        getChildFragmentManager().beginTransaction()
+                .remove(getChildFragmentManager().findFragmentByTag("SelectionFragment"))
+                .commit();
+
+        // Hide the container
+        getView().findViewById(R.id.selection_fragment_container).setVisibility(View.GONE);
+
+        // Notify MainActivity to refresh parent fragments
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).refreshCollections();
+        }
+
+    }
+
 
     private void updateEmoji() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());

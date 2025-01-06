@@ -1,5 +1,6 @@
 package com.fz.pocketcloset;
 
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -7,7 +8,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class CollectionsManager {
 
@@ -219,8 +222,49 @@ public class CollectionsManager {
     }
 
 
+    public List<Collection> getAvailableCollectionsForClothing(int clothingId) {
+        List<Collection> availableCollections = new ArrayList<>();
 
+        try {
+            SQLiteDatabase db = dbHelper.getReadableDatabase();
 
+            // Query to get all collections
+            String allCollectionsQuery = "SELECT * FROM Collections";
+            Cursor allCollectionsCursor = db.rawQuery(allCollectionsQuery, null);
 
+            // Query to get collections already assigned to the clothing item
+            String assignedCollectionsQuery = "SELECT collection_id FROM Clothes_Collections WHERE clothes_id = ?";
+            Cursor assignedCollectionsCursor = db.rawQuery(assignedCollectionsQuery, new String[]{String.valueOf(clothingId)});
 
+            // Store assigned collection IDs in a set
+            Set<Integer> assignedCollectionIds = new HashSet<>();
+            if (assignedCollectionsCursor.moveToFirst()) {
+                do {
+                    assignedCollectionIds.add(assignedCollectionsCursor.getInt(0));
+                } while (assignedCollectionsCursor.moveToNext());
+            }
+            assignedCollectionsCursor.close();
+
+            // Iterate through all collections and add unassigned ones to the list
+            if (allCollectionsCursor.moveToFirst()) {
+                do {
+                    @SuppressLint("Range") int collectionId = allCollectionsCursor.getInt(allCollectionsCursor.getColumnIndex("id"));
+                    if (!assignedCollectionIds.contains(collectionId)) {
+                        @SuppressLint("Range") String collectionName = allCollectionsCursor.getString(allCollectionsCursor.getColumnIndex("name"));
+                        @SuppressLint("Range") String collectionEmoji = allCollectionsCursor.getString(allCollectionsCursor.getColumnIndex("emoji"));
+
+                        Collection collection = new Collection(collectionId, collectionName, collectionEmoji);
+                        availableCollections.add(collection);
+                    }
+                } while (allCollectionsCursor.moveToNext());
+            }
+            allCollectionsCursor.close();
+
+            db.close();
+        } catch (Exception e) {
+            Log.e("CollectionsManager", "Error fetching available collections: " + e.getMessage(), e);
+        }
+
+        return availableCollections;
+    }
 }

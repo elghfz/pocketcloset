@@ -1,178 +1,193 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="16dp">
 
-    <!-- Clickable background -->
-    <View
-        android:id="@+id/backgroundClickableArea"
+    <!-- Selection Fragment Container -->
+    <FrameLayout
+        android:id="@+id/selection_fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@android:color/transparent" />
+        android:visibility="gone"
+        android:elevation="1dp" />
 
-    <!-- Content Layout -->
+    <!-- Main Content -->
     <LinearLayout
+        android:id="@+id/mainContent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="16dp">
-
-        <!-- Space at the top -->
-        <Space
+        android:orientation="vertical">
+        <!-- Background Clickable Area -->
+        <View
+            android:id="@+id/backgroundClickableArea"
             android:layout_width="match_parent"
-            android:layout_height="60dp" />
-
-        <FrameLayout
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:layout_gravity="center">
-
-            <!-- Clothing Image -->
-            <ImageView
-                android:id="@+id/clothingImageView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="centerCrop" />
-
-            <!-- Dark Overlay -->
-            <View
-                android:id="@+id/imageOverlay"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="#80000000"
-                android:visibility="gone" />
-
-            <!-- Edit Button -->
-            <ImageButton
-                android:id="@+id/editImageButton"
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:background="@drawable/circular_button"
-                android:src="@drawable/edit_icon"
-                android:scaleType="centerInside"
-                android:visibility="gone"
-                android:layout_gravity="center" />
-        </FrameLayout>
-
-        <!-- Tags Section -->
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:visibility="gone" />
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="30dp">
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-            <TextView
-                android:id="@+id/tagsLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🏷️ "
-                android:textStyle="bold"
-                android:layout_marginEnd="8dp"
-                android:textSize="30sp" />
+            <!-- Space at the top -->
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="60dp" />
 
+            <FrameLayout
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_gravity="center">
+
+                <!-- Clothing Image -->
+                <ImageView
+                    android:id="@+id/clothingImageView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop" />
+
+                <!-- Dark Overlay -->
+                <View
+                    android:id="@+id/imageOverlay"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="#80000000"
+                    android:visibility="gone" />
+
+                <!-- Edit Button -->
+                <ImageButton
+                    android:id="@+id/editImageButton"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/circular_button"
+                    android:src="@drawable/edit_icon"
+                    android:scaleType="centerInside"
+                    android:visibility="gone"
+                    android:layout_gravity="center" />
+            </FrameLayout>
+
+            <!-- Tags Section -->
             <LinearLayout
-                android:id="@+id/tagsContainer"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:clipChildren="false"
-                android:clipToPadding="false" />
-        </LinearLayout>
+                android:layout_marginBottom="30dp">
 
-        <!-- Collections Title -->
-        <TextView
-            android:id="@+id/collectionsTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Collections :"
-            android:textStyle="bold"
-            android:textSize="18sp"
-            android:layout_marginBottom="8dp" />
+                <TextView
+                    android:id="@+id/tagsLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🏷️ "
+                    android:textStyle="bold"
+                    android:layout_marginEnd="8dp"
+                    android:textSize="30sp" />
 
-        <!-- Collections Recyclerview -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/collectionsRecyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:clipToPadding="false"
-            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-            app:spanCount="3" />
+                <LinearLayout
+                    android:id="@+id/tagsContainer"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:clipChildren="false"
+                    android:clipToPadding="false" />
+            </LinearLayout>
 
-        <!-- Outfits Title -->
-        <TextView
-            android:id="@+id/outfitsTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Outfits :"
-            android:textStyle="bold"
-            android:textSize="18sp"
-            android:layout_marginBottom="8dp" />
+            <!-- Collections Title -->
+            <TextView
+                android:id="@+id/collectionsTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Collections :"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_marginBottom="4dp" />
 
-        <!-- Under Construction Message -->
-        <TextView
-            android:id="@+id/underConstructionMessage"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Under construction 🛠️..."
-            android:textSize="16sp"
-            android:gravity="center"
-            android:layout_marginBottom="30dp" />
+            <!-- Collections RecyclerView -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/collectionsRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                android:padding="8dp"
+                android:clipToPadding="false"
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                app:spanCount="3" />
 
-        <!-- Buttons Section -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center">
+            <!-- Outfits Title -->
+            <TextView
+                android:id="@+id/outfitsTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Outfits :"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_marginBottom="8dp" />
 
-            <!-- Edit Button -->
-            <ImageButton
-                android:id="@+id/button_edit_clothing"
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:background="@drawable/circular_button"
-                android:src="@drawable/edit_icon"
-                android:scaleType="centerInside"
-                android:layout_marginEnd="8dp"
-                android:contentDescription="Edit Tags" />
+            <!-- Under Construction Message -->
+            <TextView
+                android:id="@+id/underConstructionMessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Under construction 🛠️..."
+                android:textSize="16sp"
+                android:gravity="center"
+                android:layout_marginBottom="30dp" />
 
-            <!-- Add to Collection Button -->
-            <ImageButton
-                android:id="@+id/button_add_to_collection"
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:background="@drawable/circular_button"
-                android:src="@drawable/add_to_collection_icon"
-                android:scaleType="centerInside"
-                android:layout_marginEnd="8dp"
-                android:contentDescription="Add to Collection" />
+            <!-- Buttons Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
 
-            <!-- Delete Button -->
-            <ImageButton
-                android:id="@+id/button_delete_clothing"
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:background="@drawable/circular_button"
-                android:src="@drawable/delete_icon"
-                android:scaleType="centerInside"
-                android:layout_marginEnd="8dp"
-                android:contentDescription="Delete Clothing" />
+                <!-- Edit Button -->
+                <ImageButton
+                    android:id="@+id/button_edit_clothing"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/circular_button"
+                    android:src="@drawable/edit_icon"
+                    android:scaleType="centerInside"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="Edit Tags" />
 
-            <!-- Save Button -->
-            <ImageButton
-                android:id="@+id/button_save"
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:background="@drawable/circular_button"
-                android:src="@drawable/save_icon"
-                android:scaleType="centerInside"
-                android:contentDescription="Save" />
+                <!-- Add to Collection Button -->
+                <ImageButton
+                    android:id="@+id/button_add_to_collection"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/circular_button"
+                    android:src="@drawable/add_to_collection_icon"
+                    android:scaleType="centerInside"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="Add to Collection" />
+
+                <!-- Delete Button -->
+                <ImageButton
+                    android:id="@+id/button_delete_clothing"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/circular_button"
+                    android:src="@drawable/delete_icon"
+                    android:scaleType="centerInside"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="Delete Clothing" />
+
+                <!-- Save Button -->
+                <ImageButton
+                    android:id="@+id/button_save"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/circular_button"
+                    android:src="@drawable/save_icon"
+                    android:scaleType="centerInside"
+                    android:contentDescription="Save" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 </FrameLayout>
