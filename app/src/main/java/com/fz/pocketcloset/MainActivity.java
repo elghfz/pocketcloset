@@ -94,8 +94,9 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // Always refresh the ClothesFragment
+        // Always refresh the Main Fragments
         refreshClothingList();
+        refreshCollections();
 
         // Navigate back to the appropriate fragment based on origin
         if ("ClothesFragment".equals(originFragment)) {
@@ -200,14 +201,22 @@ public class MainActivity extends AppCompatActivity {
         viewPager.setVisibility(View.GONE);
         fragmentContainer.setVisibility(View.VISIBLE);
 
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.replace(R.id.fragment_container, detailFragment, tag)
+        // Remove existing fragment if necessary
+        Fragment existingFragment = fragmentManager.findFragmentById(R.id.fragment_container);
+        if (existingFragment != null) {
+            fragmentManager.beginTransaction().remove(existingFragment).commitNow(); // Commit immediately
+        }
+
+        // Add the new fragment
+        fragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, detailFragment, tag)
                 .addToBackStack(tag)
                 .commit();
 
         currentDetailFragment = detailFragment;
         activeFragment = detailFragment;
     }
+
 
     /**
      * Closes the currently open detail fragment.
@@ -231,13 +240,15 @@ public class MainActivity extends AppCompatActivity {
             ClothesFragment clothesFragment = (ClothesFragment) adapter.getFragmentAtPosition(0);
 
             if (clothesFragment != null) {
-                clothesFragment.reloadData();
-                Log.d(TAG, "ClothesFragment refreshed.");
+                if (clothesFragment.isAdded()) { // Ensure the fragment is attached to the activity
+                    clothesFragment.reloadData();
+                    Log.d(TAG, "ClothesFragment refreshed.");
+                } else {
+                    Log.e(TAG, "ClothesFragment not found.");
+                }
             } else {
-                Log.e(TAG, "ClothesFragment not found.");
+                Log.e(TAG, "MainFragmentAdapter not initialized.");
             }
-        } else {
-            Log.e(TAG, "MainFragmentAdapter not initialized.");
         }
     }
 
@@ -248,8 +259,12 @@ public class MainActivity extends AppCompatActivity {
             CollectionsFragment collectionsFragment = (CollectionsFragment) adapter.getFragmentAtPosition(2);
 
             if (collectionsFragment != null) {
-                collectionsFragment.reloadData();
-                Log.d(TAG, "CollectionsFragment refreshed.");
+                if (collectionsFragment.isAdded()) { // Ensure the fragment is attached to the activity
+                    collectionsFragment.reloadData();
+                    Log.d(TAG, "CollectionsFragment refreshed.");
+                } else {
+                    Log.e(TAG, "CollectionsFragment is not attached to the activity.");
+                }
             } else {
                 Log.e(TAG, "CollectionsFragment not found.");
             }
@@ -257,6 +272,7 @@ public class MainActivity extends AppCompatActivity {
             Log.e(TAG, "MainFragmentAdapter not initialized.");
         }
     }
+
 
 
     public void navigateBackToClothingDetail() {

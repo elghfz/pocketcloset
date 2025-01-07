@@ -121,7 +121,7 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
         if (selectedItems != null) {
             selectedItems.clear();
         }
-        notifyDataSetChanged();
+        new android.os.Handler().post(() -> notifyDataSetChanged());
     }
 
 

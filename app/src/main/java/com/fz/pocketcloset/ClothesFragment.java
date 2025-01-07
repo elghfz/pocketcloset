@@ -281,6 +281,9 @@ public class ClothesFragment extends Fragment implements SelectionFragment.Selec
                 adapter.notifyDataSetChanged();
                 updateClearFilterButtonVisibility(Collections.emptySet()); // Reset filter visibility
             });
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).refreshCollections();
+            }
 
         } catch (Exception e) {
             Log.e(TAG, "Error deleting selected items: " + e.getMessage(), e);

@@ -83,6 +83,7 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
             recyclerView = view.findViewById(R.id.recyclerView);
             recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 4));
 
+
             editCollectionName = view.findViewById(R.id.editCollectionName);
             emojiTextView = view.findViewById(R.id.emojiView);
 
@@ -127,9 +128,28 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
             emojiTextView.setOnClickListener(v -> updateEmoji());
             deleteButton.setOnClickListener(v -> deleteCollection());
 
+            // set adapter with its content
+
+            Log.d(TAG, "Loading clothes in collection...");
+            List<ClothingItem> clothesInCollection = new CollectionsManager(requireContext())
+                    .getClothesInCollection(collectionId);
+            Log.d(TAG, "Fetched " + clothesInCollection.size() + " clothing items for collection ID: " + collectionId);
+
+            adapter = new ClothingAdapter(
+                    clothesInCollection,
+                    this::handleItemClick,
+                    this::handleItemLongClick,
+                    isSelectionMode,
+                    true,
+                    collectionId,
+                    null
+            );
+            recyclerView.setAdapter(adapter); // Set adapter only if not already set
+            Log.d(TAG, "Adapter initialized and set to RecyclerView.");
+
             // Load the latest collection details
             loadCollectionDetails();
-            loadClothesInCollection();
+            reloadClothesInCollection();
 
             updateButtonVisibility();
         } catch (Exception e) {
@@ -146,7 +166,7 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
         Log.d(TAG, "reloadData: Reloading collection details...");
         try {
             loadCollectionDetails();
-            loadClothesInCollection();
+            reloadClothesInCollection();
             updateButtonVisibility(); // Ensure buttons are updated
         } catch (Exception e) {
             Log.e(TAG, "Error reloading collection data: " + e.getMessage(), e);
@@ -156,29 +176,18 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
 
 
 
-    private void loadClothesInCollection() {
+    private void reloadClothesInCollection() {
         try {
-            Log.d(TAG, "Loading clothes in collection...");
             List<ClothingItem> clothesInCollection = new CollectionsManager(requireContext())
                     .getClothesInCollection(collectionId);
 
             Log.d(TAG, "Fetched " + clothesInCollection.size() + " clothing items for collection ID: " + collectionId);
 
-            if (adapter == null) {
-                adapter = new ClothingAdapter(
-                        clothesInCollection,
-                        this::handleItemClick,
-                        this::handleItemLongClick,
-                        isSelectionMode,
-                        true,
-                        collectionId,
-                        null
-                );
-                recyclerView.setAdapter(adapter);
-                Log.d(TAG, "Adapter initialized and set to RecyclerView.");
-            } else {
-                adapter.updateData(clothesInCollection);
+            if (adapter != null) {
+                adapter.updateData(clothesInCollection); // Update existing adapter data
                 Log.d(TAG, "Adapter updated with new data. Item count: " + clothesInCollection.size());
+            } else {
+                Log.e(TAG, "Adapter is null. Unable to update data.");
             }
         } catch (Exception e) {
             Log.e(TAG, "Error loading clothes in collection: " + e.getMessage(), e);
@@ -260,7 +269,7 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
         }
         Toast.makeText(requireContext(), "Items removed from collection!", Toast.LENGTH_SHORT).show();
         exitSelectionMode();
-        loadClothesInCollection();
+        reloadClothesInCollection();
     }
 
 
@@ -408,7 +417,7 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
             }
 
             // Refresh the UI
-            loadClothesInCollection();
+            reloadClothesInCollection();
             Toast.makeText(requireContext(), "Clothes added successfully!", Toast.LENGTH_SHORT).show();
 
             if (getActivity() instanceof MainActivity) {

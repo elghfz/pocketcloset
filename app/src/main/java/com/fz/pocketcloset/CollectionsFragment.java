@@ -164,8 +164,17 @@ public class CollectionsFragment extends Fragment {
 
 
     public void reloadData() {
-        loadCollections();
+        if (!isAdded()) {
+            Log.e(TAG, "Fragment not attached to context, skipping reloadData.");
+            return;
+        }
+        try {
+            loadCollections();
+        } catch (Exception e) {
+            Log.e(TAG, "Error reloading collection data: " + e.getMessage(), e);
+        }
     }
+
 
 
     private void openCollection(Collection collection) {
