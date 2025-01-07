@@ -6,6 +6,13 @@
     android:orientation="vertical"
     android:padding="10dp">
 
+    <FrameLayout
+        android:id="@+id/dynamic_fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+
     <!-- Space at the top -->
     <Space
         android:layout_width="match_parent"

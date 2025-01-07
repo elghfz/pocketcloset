@@ -34,6 +34,20 @@ public class CollectionsManager {
         }
     }
 
+    public void addCollection(String name, String emoji) {
+        try {
+            SQLiteDatabase db = dbHelper.getWritableDatabase();
+            ContentValues values = new ContentValues();
+            values.put("name", name);
+            values.put("emoji", emoji);
+            db.insert("Collections", null, values);
+            db.close();
+            Log.d(TAG, "Collection added: " + name);
+        } catch (Exception e) {
+            Log.e(TAG, "Error adding collection: " + e.getMessage(), e);
+        }
+    }
+
     public List<Collection> getAllCollections() {
         List<Collection> collections = new ArrayList<>();
         try {

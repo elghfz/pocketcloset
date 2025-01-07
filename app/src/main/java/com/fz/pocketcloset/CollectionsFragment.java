@@ -47,7 +47,7 @@ public class CollectionsFragment extends Fragment {
             addCollectionButton = view.findViewById(R.id.addCollectionButton);
             deleteButton = view.findViewById(R.id.deleteButton);
 
-            addCollectionButton.setOnClickListener(v -> showAddCollectionDialog());
+            addCollectionButton.setOnClickListener(v -> showAddCollectionFragment());
             deleteButton.setOnClickListener(v -> deleteSelectedCollections());
 
             updateButtonVisibility();
@@ -144,29 +144,23 @@ public class CollectionsFragment extends Fragment {
         }
     }
 
-    private void showAddCollectionDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Add New Collection");
+    private void showAddCollectionFragment() {
+        AddCollectionFragment fragment = AddCollectionFragment.newInstance();
 
-        // Use an EditText for the input
-        final EditText input = new EditText(requireContext());
-        input.setHint("Collection Name");
-        builder.setView(input);
+        // Display the dynamic container
+        View container = requireActivity().findViewById(R.id.dynamic_fragment_container);
+        if (container != null) {
+            container.setVisibility(View.VISIBLE);
+        }
 
-        builder.setPositiveButton("Save", (dialog, which) -> {
-            String newName = input.getText().toString();
-            if (!newName.isEmpty()) {
-                new CollectionsManager(requireContext()).addCollection(newName);
-                loadCollections(); // Refresh list
-                Toast.makeText(requireContext(), "Collection added!", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(requireContext(), "Name cannot be empty.", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-        builder.show();
+        // Replace the container with the fragment
+        requireActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.dynamic_fragment_container, fragment)
+                .addToBackStack(null)
+                .commit();
     }
+
 
 
     public void reloadData() {
