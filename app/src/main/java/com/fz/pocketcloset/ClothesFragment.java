@@ -254,12 +254,8 @@ public class ClothesFragment extends Fragment implements SelectionFragment.Selec
         Log.d(TAG, "exitSelectionMode: Clearing selection state and resetting UI.");
         isSelectionMode = false;
         selectedItems.clear();
-
-        recyclerView.post(() -> {
-            adapter.setSelectionMode(false);
-            adapter.clearSelections(); // Clear any selection state in the adapter
-            adapter.notifyDataSetChanged();
-        });
+        adapter.setSelectionMode(false);
+        adapter.clearSelections(); // Clear any selection state in the adapter
 
         updateButtonVisibility();
     }
