@@ -1,8 +1,6 @@
-package com.fz.pocketcloset;
+package com.fz.pocketcloset.temporaryFragments;
 
-import android.content.ContentValues;
 import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.view.View;
 import android.widget.Button;
@@ -10,6 +8,9 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.fz.pocketcloset.helpers.DatabaseHelper;
+import com.fz.pocketcloset.R;
 
 import java.util.ArrayList;
 import java.util.Collections;

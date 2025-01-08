@@ -1,4 +1,4 @@
-package com.fz.pocketcloset;
+package com.fz.pocketcloset.items;
 
 import android.os.Parcelable;
 

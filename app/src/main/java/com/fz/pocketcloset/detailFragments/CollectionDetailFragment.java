@@ -1,4 +1,4 @@
-package com.fz.pocketcloset;
+package com.fz.pocketcloset.detailFragments;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -22,6 +22,17 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.fz.pocketcloset.mainFragments.CollectionsManager;
+import com.fz.pocketcloset.MainActivity;
+import com.fz.pocketcloset.R;
+import com.fz.pocketcloset.temporaryFragments.SelectionAdapter;
+import com.fz.pocketcloset.temporaryFragments.SelectionFragment;
+import com.fz.pocketcloset.helpers.DatabaseHelper;
+import com.fz.pocketcloset.items.ClothingItem;
+import com.fz.pocketcloset.items.Collection;
+import com.fz.pocketcloset.items.SelectableItem;
+import com.fz.pocketcloset.mainFragments.ClothingAdapter;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -270,6 +281,11 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
         Toast.makeText(requireContext(), "Items removed from collection!", Toast.LENGTH_SHORT).show();
         exitSelectionMode();
         reloadClothesInCollection();
+        if (getActivity() instanceof MainActivity) {
+            MainActivity mainActivity = (MainActivity) getActivity();
+            mainActivity.refreshCollections();
+        }
+
     }
 
 

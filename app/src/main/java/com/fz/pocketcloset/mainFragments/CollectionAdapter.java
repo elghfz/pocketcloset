@@ -1,4 +1,4 @@
-package com.fz.pocketcloset;
+package com.fz.pocketcloset.mainFragments;
 
 import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
 
@@ -13,6 +13,10 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.fz.pocketcloset.R;
+import com.fz.pocketcloset.items.ClothingItem;
+import com.fz.pocketcloset.items.Collection;
 
 import java.util.HashSet;
 import java.util.List;

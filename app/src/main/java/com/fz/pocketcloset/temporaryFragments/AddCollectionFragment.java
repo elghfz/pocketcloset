@@ -1,4 +1,4 @@
-package com.fz.pocketcloset;
+package com.fz.pocketcloset.temporaryFragments;
 
 import android.app.AlertDialog;
 import android.os.Bundle;
@@ -14,6 +14,10 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
+import com.fz.pocketcloset.mainFragments.CollectionsManager;
+import com.fz.pocketcloset.MainActivity;
+import com.fz.pocketcloset.R;
 
 public class AddCollectionFragment extends Fragment {
 

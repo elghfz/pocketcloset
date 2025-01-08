@@ -1,4 +1,4 @@
-package com.fz.pocketcloset;
+package com.fz.pocketcloset.temporaryFragments;
 
 import android.net.Uri;
 import android.view.LayoutInflater;
@@ -10,6 +10,12 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.fz.pocketcloset.R;
+import com.fz.pocketcloset.items.ClothingItem;
+import com.fz.pocketcloset.items.Collection;
+import com.fz.pocketcloset.items.SelectableItem;
+import com.fz.pocketcloset.mainFragments.CollectionsManager;
 
 import java.util.List;
 

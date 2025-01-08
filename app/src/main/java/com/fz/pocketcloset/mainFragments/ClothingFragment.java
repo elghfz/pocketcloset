@@ -1,4 +1,4 @@
-package com.fz.pocketcloset;
+package com.fz.pocketcloset.mainFragments;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -6,15 +6,15 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -26,6 +26,16 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.fz.pocketcloset.items.ClothingItem;
+import com.fz.pocketcloset.items.Collection;
+import com.fz.pocketcloset.helpers.DatabaseHelper;
+import com.fz.pocketcloset.helpers.ImagePickerHelper;
+import com.fz.pocketcloset.MainActivity;
+import com.fz.pocketcloset.R;
+import com.fz.pocketcloset.items.SelectableItem;
+import com.fz.pocketcloset.temporaryFragments.SelectionAdapter;
+import com.fz.pocketcloset.temporaryFragments.SelectionFragment;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,7 +43,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class ClothesFragment extends Fragment implements SelectionFragment.SelectionListener {
+public class ClothingFragment extends Fragment implements SelectionFragment.SelectionListener {
 
     private static final String TAG = "ClothesFragment";
     private RecyclerView recyclerView;
@@ -141,6 +151,8 @@ public class ClothesFragment extends Fragment implements SelectionFragment.Selec
             addClothesButton = view.findViewById(R.id.button_add_clothes);
             filterButton = view.findViewById(R.id.filterButton);
             clearFilterButton = view.findViewById(R.id.clearFilterButton);
+            LinearLayout selectedTagsContainer = view.findViewById(R.id.selectedTagsContainer);
+
 
             // Set up button listeners
             deleteButton.setOnClickListener(v -> deleteSelectedItems());
@@ -485,6 +497,9 @@ public class ClothesFragment extends Fragment implements SelectionFragment.Selec
                 }
             }
 
+            // Update selected tags display
+            updateSelectedTagsDisplay(selectedTagSet);
+
             if (selectedTagSet.isEmpty()) {
                 // Reset to show all items
                 filteredClothingList = new ArrayList<>(clothingList);
@@ -519,6 +534,34 @@ public class ClothesFragment extends Fragment implements SelectionFragment.Selec
 
 
 
+    private void updateSelectedTagsDisplay(Set<String> selectedTags) {
+        LinearLayout selectedTagsContainer = requireView().findViewById(R.id.selectedTagsContainer);
+
+        selectedTagsContainer.removeAllViews(); // Clear any previous tags
+
+        if (selectedTags == null || selectedTags.isEmpty()) {
+            selectedTagsContainer.setVisibility(View.GONE); // Hide if no tags are selected
+            return;
+        }
+
+        selectedTagsContainer.setVisibility(View.VISIBLE); // Show the container
+
+        for (String tag : selectedTags) {
+            TextView tagView = new TextView(requireContext());
+            tagView.setText(tag);
+            tagView.setPadding(16, 8, 16, 8);
+            tagView.setTextSize(14);
+            tagView.setBackgroundResource(R.drawable.tag_background); // Add a drawable background for tags
+            tagView.setTextColor(requireContext().getColor(android.R.color.white));
+            selectedTagsContainer.addView(tagView);
+
+            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) tagView.getLayoutParams();
+            params.setMargins(8, 8, 8, 8);
+            tagView.setLayoutParams(params);
+        }
+    }
+
+
     private Set<String> normalizeTags(Set<String> tags) {
         Set<String> normalizedTags = new HashSet<>();
         for (String tag : tags) {
@@ -536,12 +579,14 @@ public class ClothesFragment extends Fragment implements SelectionFragment.Selec
             // Reset the UI
             updateAddClothesButtonVisibility(true);
             updateClearFilterButtonVisibility(Collections.emptySet());
+
+            // Clear the tags display
+            updateSelectedTagsDisplay(Collections.emptySet());
         } catch (Exception e) {
             Log.e(TAG, "Error clearing filter: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Failed to clear filter.", Toast.LENGTH_SHORT).show();
         }
     }
-
 
     private void updateAddClothesButtonVisibility(boolean isVisible) {
         addClothesButton.setVisibility(isVisible ? View.VISIBLE : View.GONE);

@@ -8,10 +8,12 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
-import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.fz.pocketcloset.detailFragments.ClothingDetailFragment;
+import com.fz.pocketcloset.detailFragments.CollectionDetailFragment;
+import com.fz.pocketcloset.mainFragments.ClothingFragment;
+import com.fz.pocketcloset.mainFragments.CollectionsFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
@@ -68,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         // Refresh the active fragment
-        if (activeFragment instanceof ClothesFragment) {
+        if (activeFragment instanceof ClothingFragment) {
             refreshClothingList();
         } else if (activeFragment instanceof CollectionsFragment) {
             refreshCollections();
@@ -237,11 +239,11 @@ public class MainActivity extends AppCompatActivity {
         MainFragmentAdapter adapter = (MainFragmentAdapter) viewPager.getAdapter();
 
         if (adapter != null) {
-            ClothesFragment clothesFragment = (ClothesFragment) adapter.getFragmentAtPosition(0);
+            ClothingFragment clothingFragment = (ClothingFragment) adapter.getFragmentAtPosition(0);
 
-            if (clothesFragment != null) {
-                if (clothesFragment.isAdded()) { // Ensure the fragment is attached to the activity
-                    clothesFragment.reloadData();
+            if (clothingFragment != null) {
+                if (clothingFragment.isAdded()) { // Ensure the fragment is attached to the activity
+                    clothingFragment.reloadData();
                     Log.d(TAG, "ClothesFragment refreshed.");
                 } else {
                     Log.e(TAG, "ClothesFragment not found.");

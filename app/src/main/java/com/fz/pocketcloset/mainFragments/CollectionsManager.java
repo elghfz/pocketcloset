@@ -1,4 +1,4 @@
-package com.fz.pocketcloset;
+package com.fz.pocketcloset.mainFragments;
 
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
@@ -6,6 +6,10 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
+
+import com.fz.pocketcloset.helpers.DatabaseHelper;
+import com.fz.pocketcloset.items.ClothingItem;
+import com.fz.pocketcloset.items.Collection;
 
 import java.util.ArrayList;
 import java.util.HashSet;

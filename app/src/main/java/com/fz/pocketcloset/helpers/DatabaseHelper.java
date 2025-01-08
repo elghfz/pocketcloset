@@ -1,4 +1,4 @@
-package com.fz.pocketcloset;
+package com.fz.pocketcloset.helpers;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;

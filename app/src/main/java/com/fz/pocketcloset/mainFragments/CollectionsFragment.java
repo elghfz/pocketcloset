@@ -1,13 +1,10 @@
-package com.fz.pocketcloset;
+package com.fz.pocketcloset.mainFragments;
 
-import android.app.AlertDialog;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
@@ -15,8 +12,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.fz.pocketcloset.MainActivity;
+import com.fz.pocketcloset.R;
+import com.fz.pocketcloset.helpers.DatabaseHelper;
+import com.fz.pocketcloset.items.Collection;
+import com.fz.pocketcloset.temporaryFragments.AddCollectionFragment;
 
 import java.util.HashSet;
 import java.util.List;

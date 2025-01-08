@@ -81,6 +81,18 @@
         android:layout_width="match_parent"
         android:layout_height="16dp" />
 
+    <!-- Selected Tags Container -->
+    <LinearLayout
+        android:id="@+id/selectedTagsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        android:padding="8dp"
+        android:layout_marginBottom="8dp"
+        android:gravity="start"
+        android:background="?android:attr/windowBackground">
+    </LinearLayout>
     <!-- Grid view for clothing items -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"

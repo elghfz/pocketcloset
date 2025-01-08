@@ -1,6 +1,5 @@
-package com.fz.pocketcloset;
+package com.fz.pocketcloset.helpers;
 
-import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -12,11 +11,13 @@ import android.graphics.Paint;
 import android.net.Uri;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.fz.pocketcloset.R;
+import com.fz.pocketcloset.temporaryFragments.AddClothesFragment;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -161,7 +162,7 @@ public class ImagePickerHelper {
     }
 
 
-    static Bitmap addImageOnTransparentSquare(Bitmap sourceBitmap) {
+    public static Bitmap addImageOnTransparentSquare(Bitmap sourceBitmap) {
         int squareSize = Math.max(sourceBitmap.getWidth(), sourceBitmap.getHeight());
         Bitmap outputBitmap = Bitmap.createBitmap(squareSize, squareSize, Bitmap.Config.ARGB_8888);
 

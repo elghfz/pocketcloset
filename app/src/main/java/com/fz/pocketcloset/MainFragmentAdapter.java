@@ -5,6 +5,10 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
+import com.fz.pocketcloset.mainFragments.ClothingFragment;
+import com.fz.pocketcloset.mainFragments.CollectionsFragment;
+import com.fz.pocketcloset.mainFragments.OutfitsFragment;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +20,7 @@ public class MainFragmentAdapter extends FragmentStateAdapter {
 
         // Initialize the fragment list with instances of the fragments
         fragmentList = new ArrayList<>();
-        fragmentList.add(new ClothesFragment());    // Position 0
+        fragmentList.add(new ClothingFragment());    // Position 0
         fragmentList.add(new OutfitsFragment());    // Position 1
         fragmentList.add(new CollectionsFragment()); // Position 2
     }

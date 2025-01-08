@@ -1,4 +1,4 @@
-package com.fz.pocketcloset;
+package com.fz.pocketcloset.detailFragments;
 
 import android.app.AlertDialog;
 import android.content.ContentValues;
@@ -26,8 +26,20 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.fz.pocketcloset.items.ClothingItem;
+import com.fz.pocketcloset.mainFragments.ClothingManager;
+import com.fz.pocketcloset.items.Collection;
+import com.fz.pocketcloset.mainFragments.CollectionAdapter;
+import com.fz.pocketcloset.mainFragments.CollectionsManager;
+import com.fz.pocketcloset.helpers.DatabaseHelper;
+import com.fz.pocketcloset.helpers.ImagePickerHelper;
+import com.fz.pocketcloset.MainActivity;
+import com.fz.pocketcloset.R;
+import com.fz.pocketcloset.items.SelectableItem;
+import com.fz.pocketcloset.temporaryFragments.SelectionAdapter;
+import com.fz.pocketcloset.temporaryFragments.SelectionFragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -525,7 +537,6 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
             Toast.makeText(requireContext(), "Failed to delete clothing item.", Toast.LENGTH_SHORT).show();
         }
     }
-
 
 
     public void reloadData() {
