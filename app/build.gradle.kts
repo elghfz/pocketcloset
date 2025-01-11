@@ -42,4 +42,8 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation("androidx.core:core-ktx:1.10.1")
+    implementation ("com.github.bumptech.glide:glide:4.15.1")
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.15.1")
+    implementation ("com.google.android.flexbox:flexbox:3.0.0")
+
 }

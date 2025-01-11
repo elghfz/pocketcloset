@@ -5,7 +5,13 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.transition.Transition;
+import android.graphics.drawable.Drawable;
+
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -173,44 +179,56 @@ public class OutfitCreationFragment extends Fragment {
 
     private void saveOutfit() {
         try {
-            // Define output dimensions
-            int outputWidth = 120;
-            int outputHeight = 200;
-
             // Create a bitmap for the visible canvas content
             Bitmap visibleContentBitmap = Bitmap.createBitmap(canvasContainer.getWidth(), canvasContainer.getHeight(), Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(visibleContentBitmap);
-            canvasContainer.draw(canvas); // Draw the canvas and its children onto the bitmap
+            canvasContainer.draw(canvas); // Draw the canvas onto the bitmap
 
-            // Create a scaled bitmap with the desired dimensions
-            Bitmap scaledBitmap = Bitmap.createScaledBitmap(visibleContentBitmap, outputWidth, outputHeight, true);
-
-            // Save the scaled bitmap
+            // Prepare the output directory
             File outputDir = new File(requireContext().getFilesDir(), "outfits");
-            if (!outputDir.exists()) {
-                boolean created = outputDir.mkdirs();
-                if (!created) {
-                    throw new IllegalStateException("Failed to create directory: " + outputDir.getAbsolutePath());
-                }
+            if (!outputDir.exists() && !outputDir.mkdirs()) {
+                throw new IllegalStateException("Failed to create directory: " + outputDir.getAbsolutePath());
             }
 
             File outputFile = new File(outputDir, System.currentTimeMillis() + ".png");
-            try (FileOutputStream out = new FileOutputStream(outputFile)) {
-                scaledBitmap.compress(Bitmap.CompressFormat.PNG, 90, out); // Reduced compression to 90%
-            }
 
-            // Save to database
-            String outfitName = "Outfit " + System.currentTimeMillis();
-            new OutfitManager(requireContext()).addOutfit(outfitName, outputFile.getAbsolutePath(), selectedClothes);
+            // Use Glide to resize and save
+            Glide.with(requireContext())
+                    .asBitmap()
+                    .load(visibleContentBitmap) // Input bitmap
+                    .override(96, 160) // Target dimensions
+                    .into(new com.bumptech.glide.request.target.CustomTarget<Bitmap>() {
+                        @Override
+                        public void onResourceReady(@NonNull Bitmap resource, @Nullable com.bumptech.glide.request.transition.Transition<? super Bitmap> transition) {
+                            try (FileOutputStream out = new FileOutputStream(outputFile)) {
+                                resource.compress(Bitmap.CompressFormat.PNG, 100, out); // Lossless PNG compression
+                                out.flush();
 
-            Toast.makeText(requireContext(), "Outfit saved!", Toast.LENGTH_SHORT).show();
-            showRegularFragment(); // Ensure the regular fragment is shown after saving
+                                // Save to database
+                                String outfitName = "Outfit " + System.currentTimeMillis();
+                                new OutfitManager(requireContext()).addOutfit(outfitName, outputFile.getAbsolutePath(), selectedClothes);
+
+                                Toast.makeText(requireContext(), "Outfit saved!", Toast.LENGTH_SHORT).show();
+                                showRegularFragment();
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error saving file with Glide: " + e.getMessage(), e);
+                                Toast.makeText(requireContext(), "Failed to save outfit.", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                        @Override
+                        public void onLoadCleared(@Nullable Drawable placeholder) {
+                            //nothing here
+                        }
+                    });
 
         } catch (Exception e) {
             Log.e(TAG, "Error saving outfit: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Failed to save outfit.", Toast.LENGTH_SHORT).show();
         }
     }
+
+
 
 
 

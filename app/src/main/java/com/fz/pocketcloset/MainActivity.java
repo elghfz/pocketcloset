@@ -79,17 +79,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void refreshOutfitsFragment() {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        Fragment fragment = fragmentManager.findFragmentByTag("f1"); // Assuming OutfitsFragment is at index 1 in the ViewPager2
-
-        if (fragment instanceof OutfitsFragment) {
-            ((OutfitsFragment) fragment).reloadOutfits();
-        } else {
-            Log.e("MainActivity", "OutfitsFragment not found.");
-        }
-    }
-
 
 
     /**
@@ -290,6 +279,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    public void refreshOutfitsFragment() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        Fragment fragment = fragmentManager.findFragmentByTag("f1"); // Assuming OutfitsFragment is at index 1 in the ViewPager2
+
+        if (fragment instanceof OutfitsFragment) {
+            ((OutfitsFragment) fragment).reloadOutfits();
+        } else {
+            Log.e("MainActivity", "OutfitsFragment not found.");
+        }
+    }
 
 
     public void navigateBackToClothingDetail() {

@@ -1,6 +1,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:padding="16dp">
 
@@ -48,17 +49,16 @@
     </LinearLayout>
 
     <!-- Dynamic Tags Display -->
-    <LinearLayout
+    <com.google.android.flexbox.FlexboxLayout
         android:id="@+id/addedTagsContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        app:flexWrap="wrap"
+        app:flexDirection="row"
+        app:justifyContent="flex_start"
         android:padding="8dp"
-        android:visibility="gone"
-        android:gravity="start"
-        android:layout_marginTop="8dp"
-        android:background="?android:attr/windowBackground">
-    </LinearLayout>
+        android:layout_marginTop="8dp">
+    </com.google.android.flexbox.FlexboxLayout>
 
     <!-- Save and Cancel Buttons -->
     <LinearLayout
@@ -89,13 +89,23 @@
             android:contentDescription="Save" />
     </LinearLayout>
 
-    <!-- Tag Suggestions RecyclerView -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/tagSuggestionsRecyclerView"
-        android:layout_width="match_parent"
+    <!-- Suggested Tags Label -->
+    <TextView
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:clipToPadding="false"
-        android:scrollbars="vertical" />
+        android:text="Suggested Tags :"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
 
+    <!-- Suggested Tags -->
+    <com.google.android.flexbox.FlexboxLayout
+        android:id="@+id/tagSuggestionsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:flexWrap="wrap"
+        app:flexDirection="row"
+        app:justifyContent="flex_start"
+        android:padding="8dp" />
 </LinearLayout>

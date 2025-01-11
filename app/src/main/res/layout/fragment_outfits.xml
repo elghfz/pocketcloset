@@ -40,7 +40,7 @@
         android:layout_height="451dp"
         android:clipToPadding="false"
         android:padding="8dp"
-        app:spanCount="1"
+        app:spanCount="2"
         app:layoutManager="androidx.recyclerview.widget.GridLayoutManager" />
 
     <!-- Action Buttons -->

@@ -49,7 +49,7 @@ public class OutfitsFragment extends Fragment implements SelectionFragment.Selec
 
         try {
             recyclerView = view.findViewById(R.id.outfitRecyclerView);
-            recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 1));
+            recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 2));
 
             addOutfitButton = view.findViewById(R.id.addOutfitButton);
             deleteButton = view.findViewById(R.id.deleteButton);

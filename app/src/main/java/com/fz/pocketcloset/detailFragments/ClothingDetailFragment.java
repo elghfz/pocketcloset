@@ -1,6 +1,5 @@
 package com.fz.pocketcloset.detailFragments;
 
-import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
@@ -26,10 +25,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.fz.pocketcloset.items.ClothingItem;
+import com.fz.pocketcloset.items.Outfit;
 import com.fz.pocketcloset.mainFragments.ClothingManager;
 import com.fz.pocketcloset.items.Collection;
 import com.fz.pocketcloset.mainFragments.CollectionAdapter;
@@ -39,9 +38,16 @@ import com.fz.pocketcloset.helpers.ImagePickerHelper;
 import com.fz.pocketcloset.MainActivity;
 import com.fz.pocketcloset.R;
 import com.fz.pocketcloset.items.SelectableItem;
+import com.fz.pocketcloset.mainFragments.OutfitAdapter;
+import com.fz.pocketcloset.mainFragments.OutfitManager;
 import com.fz.pocketcloset.temporaryFragments.SelectionAdapter;
 import com.fz.pocketcloset.temporaryFragments.SelectionFragment;
-import com.fz.pocketcloset.temporaryFragments.TagSuggestionsAdapter;
+//import com.fz.pocketcloset.temporaryFragments.TagSuggestionsAdapter;
+import com.google.android.flexbox.FlexDirection;
+import com.google.android.flexbox.FlexWrap;
+import com.google.android.flexbox.FlexboxLayout;
+import com.google.android.flexbox.FlexboxLayoutManager;
+import com.google.android.flexbox.JustifyContent;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -54,10 +60,10 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
     private ImagePickerHelper imagePickerHelper;
     private ActivityResultLauncher<Intent> pickImageLauncher;
     private ImageView clothingImageView;
-    private RecyclerView collectionsRecyclerView;
+    private RecyclerView collectionsRecyclerView, outfitsRecyclerView;;
     private int clothingId;
     private String originFragment; // Tracks where the user came from
-    private LinearLayout tagsContainer;
+    private FlexboxLayout tagsContainer;
     private View imageOverlay;
     private ImageButton editImageButton;
     private View backgroundClickableArea;
@@ -116,15 +122,18 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
             originFragment = requireArguments().getString("origin", "ClothesFragment"); // Default to ClothesFragment
             dbHelper = new DatabaseHelper(requireContext());
 
-            tagsContainer = view.findViewById(R.id.tagsContainer);
+            tagsContainer = view.findViewById(R.id.addedTagsContainer);
             clothingImageView = view.findViewById(R.id.clothingImageView);
             collectionsRecyclerView = view.findViewById(R.id.collectionsRecyclerView);
+            outfitsRecyclerView = view.findViewById(R.id.outfitsRecyclerView);
             imageOverlay = view.findViewById(R.id.imageOverlay);
             editImageButton = view.findViewById(R.id.editImageButton);
             backgroundClickableArea = view.findViewById(R.id.backgroundClickableArea);
 
-            GridLayoutManager layoutManager = new GridLayoutManager(requireContext(), 3);
-            collectionsRecyclerView.setLayoutManager(layoutManager);
+            GridLayoutManager collectionsLayoutManager = new GridLayoutManager(requireContext(), 3);
+            GridLayoutManager outfitsLayoutManager = new GridLayoutManager(requireContext(), 3);
+            collectionsRecyclerView.setLayoutManager(collectionsLayoutManager);
+            outfitsRecyclerView.setLayoutManager(outfitsLayoutManager);
 
             // Initialize ImagePickerHelper
             imagePickerHelper = new ImagePickerHelper(requireContext(), dbHelper, result -> {
@@ -178,6 +187,7 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
             ClothingItem clothing = clothingManager.getClothingById(clothingId);
 
             if (clothing != null) {
+                // Safely load image
                 clothingImageView.setImageURI(clothing.getImagePath() != null ? Uri.parse(clothing.getImagePath()) : null);
 
                 // Set tags dynamically
@@ -201,8 +211,8 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
                     tagsContainer.addView(tagView);
                 }
 
+                // Load collections
                 List<Collection> collections = new CollectionsManager(requireContext()).getCollectionsForClothing(clothingId);
-
                 GridLayoutManager layoutManager = new GridLayoutManager(requireContext(), 3);
                 collectionsRecyclerView.setLayoutManager(layoutManager);
 
@@ -230,6 +240,39 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
         }
     }
 
+
+    private void loadOutfitsForClothing() {
+        try (SQLiteDatabase db = dbHelper.getReadableDatabase()) {
+            String query = "SELECT o.id, o.name, o.combinedImagePath " +
+                    "FROM Clothes_Outfits co " +
+                    "JOIN Outfits o ON co.outfit_id = o.id " +
+                    "WHERE co.clothes_id = ?";
+            Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(clothingId)});
+
+            List<Outfit> outfits = new ArrayList<>();
+            if (cursor.moveToFirst()) {
+                do {
+                    int id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
+                    String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
+                    String combinedImagePath = cursor.getString(cursor.getColumnIndexOrThrow("combinedImagePath"));
+                    outfits.add(new Outfit(id, name, combinedImagePath));
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
+
+            OutfitAdapter outfitAdapter = new OutfitAdapter(
+                    outfits,
+                    outfit -> Toast.makeText(requireContext(), "Clicked on outfit: " + outfit.getName(), Toast.LENGTH_SHORT).show(),
+                    null,
+                    false
+            );
+            outfitsRecyclerView.setAdapter(outfitAdapter);
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading outfits for clothing: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Failed to load outfits.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void showTagsEditor() {
         if (getView() == null) return;
 
@@ -251,8 +294,8 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
         ImageView imageView = editorView.findViewById(R.id.imageView);
         EditText newTagInput = editorView.findViewById(R.id.newTagInput);
         ImageButton addTagButton = editorView.findViewById(R.id.addTagButton);
-        RecyclerView tagSuggestionsRecyclerView = editorView.findViewById(R.id.tagSuggestionsRecyclerView);
-        LinearLayout addedTagsContainer = editorView.findViewById(R.id.addedTagsContainer);
+        FlexboxLayout tagSuggestionsContainer = editorView.findViewById(R.id.tagSuggestionsContainer);
+        FlexboxLayout addedTagsContainer = editorView.findViewById(R.id.addedTagsContainer);
         ImageButton saveButton = editorView.findViewById(R.id.saveButton);
         ImageButton cancelButton = editorView.findViewById(R.id.cancelButton);
 
@@ -267,8 +310,8 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
         if (clothing != null) {
             String[] existingTags = clothing.getTags() != null ? clothing.getTags().split(",") : new String[0];
             for (String tag : existingTags) {
-                addTagToContainer(tag.trim(), addedTagsContainer, tagSuggestionsRecyclerView);
-                addedTagsSet.add(tag.trim()); // Add to set for filtering
+                addTagToContainer(tag.trim(), addedTagsContainer, tagSuggestionsContainer);
+                addedTagsSet.add(tag.trim());
             }
         }
 
@@ -281,25 +324,35 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
             }
         }
 
+        // Add suggestions to the FlexboxLayout
+        for (String tag : filteredSuggestions) {
+            TextView suggestionView = new TextView(requireContext());
+            suggestionView.setText(tag);
+            suggestionView.setPadding(16, 8, 16, 8);
+            suggestionView.setBackgroundResource(R.drawable.tag_background);
+            suggestionView.setTextSize(14);
 
-        TagSuggestionsAdapter tagSuggestionsAdapter = new TagSuggestionsAdapter(filteredSuggestions, null);
-        tagSuggestionsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        tagSuggestionsRecyclerView.setAdapter(tagSuggestionsAdapter);
-        tagSuggestionsAdapter.setTagClickListener(tag -> {
-            addTagToContainer(tag, addedTagsContainer, tagSuggestionsRecyclerView);
-            filteredSuggestions.remove(tag);
-            tagSuggestionsAdapter.notifyDataSetChanged();
-        });
+            FlexboxLayout.LayoutParams layoutParams = new FlexboxLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            layoutParams.setMargins(8, 8, 8, 8);
+            suggestionView.setLayoutParams(layoutParams);
 
+            suggestionView.setOnClickListener(v -> {
+                addTagToContainer(tag, addedTagsContainer, tagSuggestionsContainer);
+                filteredSuggestions.remove(tag);
+                tagSuggestionsContainer.removeView(suggestionView);
+            });
 
-        tagSuggestionsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        tagSuggestionsRecyclerView.setAdapter(tagSuggestionsAdapter);
+            tagSuggestionsContainer.addView(suggestionView);
+        }
 
         // Handle adding a new tag
         addTagButton.setOnClickListener(v -> {
             String tagText = newTagInput.getText().toString().trim();
             if (!tagText.isEmpty()) {
-                addTagToContainer(tagText, addedTagsContainer, tagSuggestionsRecyclerView);
+                addTagToContainer(tagText, addedTagsContainer, tagSuggestionsContainer);
                 newTagInput.setText("");
             } else {
                 Toast.makeText(requireContext(), "Tag cannot be empty", Toast.LENGTH_SHORT).show();
@@ -317,7 +370,10 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
         cancelButton.setOnClickListener(v -> hideTagsEditor());
     }
 
-    private void addTagToContainer(String tag, LinearLayout container, RecyclerView tagSuggestionsRecyclerView) {
+
+
+    private void addTagToContainer(String tag, FlexboxLayout container, @Nullable FlexboxLayout tagSuggestionsContainer) {
+        // Check if the tag is already added
         for (int i = 0; i < container.getChildCount(); i++) {
             TextView existingTag = (TextView) container.getChildAt(i);
             if (existingTag.getText().toString().equalsIgnoreCase(tag)) {
@@ -326,27 +382,59 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
             }
         }
 
+        // Create a new TextView for the tag
         TextView tagView = new TextView(requireContext());
-        tagView.setText(tag);
-        tagView.setPadding(16, 8, 16, 8);
-        tagView.setBackgroundResource(R.drawable.tag_background);
+        tagView.setText(tag); // Set the tag text
+        tagView.setPadding(16, 8, 16, 8); // Padding inside the tag
+        tagView.setBackgroundResource(R.drawable.tag_background); // Background drawable
+        tagView.setTextSize(14); // Text size
+        tagView.setGravity(android.view.Gravity.CENTER); // Center the text
 
+        // Set layout params for Flexbox
+        FlexboxLayout.LayoutParams layoutParams = new FlexboxLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        layoutParams.setMargins(8, 8, 8, 8); // Margins between tags
+        tagView.setLayoutParams(layoutParams);
+
+        // Set up removal on click
         tagView.setOnClickListener(v -> {
-            container.removeView(tagView); // Remove tag from container
-            // Add back to suggestions
-            TagSuggestionsAdapter adapter = (TagSuggestionsAdapter) tagSuggestionsRecyclerView.getAdapter();
-            if (adapter != null) {
-                adapter.addTag(tag);
+            container.removeView(tagView); // Remove the tag from the container
+
+            // If tagSuggestionsContainer is provided, add the tag back to suggestions
+            if (tagSuggestionsContainer != null) {
+                TextView suggestionView = new TextView(requireContext());
+                suggestionView.setText(tag);
+                suggestionView.setPadding(16, 8, 16, 8);
+                suggestionView.setBackgroundResource(R.drawable.tag_background);
+                suggestionView.setTextSize(14);
+
+                FlexboxLayout.LayoutParams suggestionLayoutParams = new FlexboxLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+                suggestionLayoutParams.setMargins(8, 8, 8, 8);
+                suggestionView.setLayoutParams(suggestionLayoutParams);
+
+                suggestionView.setOnClickListener(suggestion -> {
+                    addTagToContainer(tag, container, tagSuggestionsContainer);
+                    tagSuggestionsContainer.removeView(suggestionView);
+                });
+
+                tagSuggestionsContainer.addView(suggestionView);
             }
         });
 
+        // Add the tag to the FlexboxLayout
         container.addView(tagView);
-        container.setVisibility(View.VISIBLE);
+        container.setVisibility(View.VISIBLE); // Ensure the container is visible
     }
 
 
 
-    private List<String> getTagsFromContainer(LinearLayout container) {
+
+    private List<String> getTagsFromContainer(FlexboxLayout container) {
         List<String> tags = new ArrayList<>();
         for (int i = 0; i < container.getChildCount(); i++) {
             TextView tagView = (TextView) container.getChildAt(i);
@@ -615,11 +703,30 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
 
     private void deleteClothing() {
         try {
+            // Delete associated outfits
+            List<Integer> linkedOutfitIds = new ArrayList<>();
+            SQLiteDatabase db = new DatabaseHelper(requireContext()).getReadableDatabase();
+            String query = "SELECT outfit_id FROM Clothes_Outfits WHERE clothes_id = ?";
+            Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(clothingId)});
+
+            if (cursor != null) {
+                while (cursor.moveToNext()) {
+                    linkedOutfitIds.add(cursor.getInt(0));
+                }
+                cursor.close();
+            }
+
             // Delete the clothing item
             new ClothingManager(requireContext()).deleteClothingItem(clothingId);
 
-            Toast.makeText(requireContext(), "Clothing item deleted!", Toast.LENGTH_SHORT).show();
+            // Delete linked outfits
+            for (int outfitId : linkedOutfitIds) {
+                new OutfitManager(requireContext()).deleteOutfit(outfitId);
+            }
 
+            Toast.makeText(requireContext(), "Clothing item and associated outfits deleted!", Toast.LENGTH_SHORT).show();
+
+            // Notify MainActivity and refresh the outfits fragment
             if (getActivity() instanceof MainActivity) {
                 MainActivity mainActivity = (MainActivity) getActivity();
 
@@ -630,6 +737,7 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
 
                 // Notify MainActivity
                 mainActivity.handleClothingDeletion(originFragment, args);
+                mainActivity.refreshOutfitsFragment(); // Refresh the outfits fragment
             }
         } catch (Exception e) {
             Log.e(TAG, "Error deleting clothing item: " + e.getMessage(), e);

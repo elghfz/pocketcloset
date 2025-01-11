@@ -275,12 +275,37 @@ public class ClothingFragment extends Fragment implements SelectionFragment.Sele
     private void deleteSelectedItems() {
         try {
             List<Integer> idsToDelete = new ArrayList<>();
+            List<Integer> linkedOutfitIds = new ArrayList<>();
+            SQLiteDatabase db = new DatabaseHelper(requireContext()).getReadableDatabase();
+
+            // Collect all clothing IDs to delete
             for (ClothingItem item : selectedItems) {
                 idsToDelete.add(item.getId());
+
+                // Fetch linked outfits for each clothing item
+                String query = "SELECT outfit_id FROM Clothes_Outfits WHERE clothes_id = ?";
+                Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(item.getId())});
+
+                if (cursor != null) {
+                    while (cursor.moveToNext()) {
+                        int outfitId = cursor.getInt(0);
+                        if (!linkedOutfitIds.contains(outfitId)) {
+                            linkedOutfitIds.add(outfitId);
+                        }
+                    }
+                    cursor.close();
+                }
             }
 
+            // Delete clothing items
             clothingManager.deleteMultipleItems(idsToDelete);
-            Toast.makeText(requireContext(), "Items deleted!", Toast.LENGTH_SHORT).show();
+
+            // Delete linked outfits
+            for (int outfitId : linkedOutfitIds) {
+                new OutfitManager(requireContext()).deleteOutfit(outfitId);
+            }
+
+            Toast.makeText(requireContext(), "Items and associated outfits deleted!", Toast.LENGTH_SHORT).show();
             exitSelectionMode();
 
             // Update clothing list and filtered list
@@ -293,8 +318,11 @@ public class ClothingFragment extends Fragment implements SelectionFragment.Sele
                 adapter.notifyDataSetChanged();
                 updateClearFilterButtonVisibility(Collections.emptySet()); // Reset filter visibility
             });
+
+            // Refresh outfits fragment
             if (getActivity() instanceof MainActivity) {
                 ((MainActivity) getActivity()).refreshCollections();
+                ((MainActivity) getActivity()).refreshOutfitsFragment(); // Refresh outfits fragment
             }
 
         } catch (Exception e) {
@@ -302,6 +330,7 @@ public class ClothingFragment extends Fragment implements SelectionFragment.Sele
             Toast.makeText(requireContext(), "Error deleting items.", Toast.LENGTH_SHORT).show();
         }
     }
+
 
 
     public void reloadData() {

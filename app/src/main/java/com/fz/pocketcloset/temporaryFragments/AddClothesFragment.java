@@ -13,15 +13,17 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
+
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.flexbox.FlexboxLayout;
+
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+
 
 import com.fz.pocketcloset.mainFragments.ClothingManager;
 import com.fz.pocketcloset.helpers.DatabaseHelper;
@@ -46,9 +48,9 @@ public class AddClothesFragment extends Fragment {
 
     private Set<String> currentTags; // For dynamically added tags
     private List<String> suggestedTags; // Suggested tags from the database
-    private TagSuggestionsAdapter tagSuggestionsAdapter; // Adapter for the RecyclerView
-    private LinearLayout addedTagsContainer; // For displaying added tags
-    private RecyclerView tagSuggestionsRecyclerView;
+ //   private TagSuggestionsAdapter tagSuggestionsAdapter; // Adapter for the RecyclerView
+    private FlexboxLayout addedTagsContainer; // For displaying added tags
+    private FlexboxLayout tagSuggestionsContainer;
 
     public static AddClothesFragment newInstance(List<Uri> imageUris) {
         AddClothesFragment fragment = new AddClothesFragment();
@@ -68,7 +70,6 @@ public class AddClothesFragment extends Fragment {
         pendingItems = new ArrayList<>();
     }
 
-    @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_add_clothes, container, false);
@@ -80,19 +81,11 @@ public class AddClothesFragment extends Fragment {
         cancelButton = view.findViewById(R.id.cancelButton);
         ImageButton addTagButton = view.findViewById(R.id.addTagButton);
         addedTagsContainer = view.findViewById(R.id.addedTagsContainer);
-        tagSuggestionsRecyclerView = view.findViewById(R.id.tagSuggestionsRecyclerView);
+        tagSuggestionsContainer = view.findViewById(R.id.tagSuggestionsContainer);
 
         // Initialize tag lists
         currentTags = new HashSet<>();
-        suggestedTags = new ArrayList<>(fetchSuggestedTags()); // Fetch tags from DB or ClothingManager
-
-        // Set up the tag suggestions RecyclerView
-        tagSuggestionsAdapter = new TagSuggestionsAdapter(suggestedTags, tag -> {
-            addTagToContainer(tag);
-            updateSuggestions(tag);
-        });
-        tagSuggestionsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        tagSuggestionsRecyclerView.setAdapter(tagSuggestionsAdapter);
+        suggestedTags = new ArrayList<>(fetchSuggestedTags());
 
         // Add tag button click listener
         addTagButton.setOnClickListener(v -> {
@@ -116,6 +109,8 @@ public class AddClothesFragment extends Fragment {
         return view;
     }
 
+
+
     private void addTagToContainer(String tag) {
         if (!tag.isEmpty() && !currentTags.contains(tag)) {
             currentTags.add(tag);
@@ -125,28 +120,42 @@ public class AddClothesFragment extends Fragment {
             tagView.setText(tag);
             tagView.setPadding(16, 8, 16, 8);
             tagView.setBackgroundResource(R.drawable.tag_background);
+            tagView.setTextSize(14);
+            tagView.setGravity(android.view.Gravity.CENTER);
+
+            // Set layout params for Flexbox
+            FlexboxLayout.LayoutParams layoutParams = new FlexboxLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            layoutParams.setMargins(8, 8, 8, 8);
+            tagView.setLayoutParams(layoutParams);
 
             // Set up removal on click
             tagView.setOnClickListener(v -> {
                 currentTags.remove(tag);
                 addedTagsContainer.removeView(tagView);
-                updateSuggestions(null); // Refresh suggestions
+                updateSuggestions(null);
                 if (currentTags.isEmpty()) {
                     addedTagsContainer.setVisibility(View.GONE);
                 }
             });
 
+            // Add the tag to the container
             addedTagsContainer.addView(tagView);
             addedTagsContainer.setVisibility(View.VISIBLE);
         }
     }
 
-    private void updateSuggestions(String tagToRemove) {
-        // Re-fetch combined tags from the database and pending items
-        suggestedTags.clear();
-        suggestedTags.addAll(fetchSuggestedTags());
 
-        // Remove already added tags from suggestions
+
+
+    private void updateSuggestions(String tagToRemove) {
+        tagSuggestionsContainer.removeAllViews(); // Clear current suggestions
+        suggestedTags.clear(); // Clear the suggested tags list
+        suggestedTags.addAll(fetchSuggestedTags()); // Fetch new suggestions from the database or pending items
+
+        // Remove already added tags
         suggestedTags.removeAll(currentTags);
 
         // Optionally, remove the tag that was just added
@@ -154,9 +163,32 @@ public class AddClothesFragment extends Fragment {
             suggestedTags.remove(tagToRemove);
         }
 
-        // Notify the adapter about changes
-        tagSuggestionsAdapter.notifyDataSetChanged();
+        // Populate suggestions in the FlexboxLayout
+        for (String tag : suggestedTags) {
+            TextView suggestionView = new TextView(requireContext());
+            suggestionView.setText(tag);
+            suggestionView.setPadding(16, 8, 16, 8);
+            suggestionView.setBackgroundResource(R.drawable.tag_background);
+            suggestionView.setTextSize(14);
+
+            // Set layout params for Flexbox
+            FlexboxLayout.LayoutParams layoutParams = new FlexboxLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            layoutParams.setMargins(8, 8, 8, 8);
+            suggestionView.setLayoutParams(layoutParams);
+
+            // Add click listener to add the tag
+            suggestionView.setOnClickListener(v -> {
+                addTagToContainer(tag);
+                updateSuggestions(tag);
+            });
+
+            tagSuggestionsContainer.addView(suggestionView);
+        }
     }
+
 
 
     private List<String> fetchSuggestedTags() {
@@ -173,7 +205,7 @@ public class AddClothesFragment extends Fragment {
             }
         }
 
-        return new ArrayList<>(combinedTags);
+        return new ArrayList<>(combinedTags); // Return as a list
     }
 
     private void commitTransaction() {
@@ -226,13 +258,14 @@ public class AddClothesFragment extends Fragment {
             }
 
             // Reset tags for the new item
-            currentTags.clear();
-            addedTagsContainer.removeAllViews();
-            addedTagsContainer.setVisibility(View.GONE);
+            currentTags.clear(); // Clear previously added tags
+            addedTagsContainer.removeAllViews(); // Remove all tag views
+            addedTagsContainer.setVisibility(View.GONE); // Hide container until new tags are added
         } else {
             commitTransaction(); // All items processed, commit the transaction
         }
     }
+
 
     private void handleSaveClick() {
         if (currentTags.isEmpty()) {

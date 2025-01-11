@@ -1,13 +1,14 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:padding="16dp">
 
     <!-- Space at the top -->
     <Space
         android:layout_width="match_parent"
-        android:layout_height="30dp" />
+        android:layout_height="15dp" />
 
     <!-- Image View for displaying the current image -->
     <ImageView
@@ -17,13 +18,6 @@
         android:scaleType="centerCrop"
         android:layout_gravity="center"
         android:contentDescription="Selected image" />
-
-    <LinearLayout
-        android:id="@+id/addedTagsContainer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="8dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -48,8 +42,21 @@
             android:src="@drawable/add_tag_icon"
             android:scaleType="centerInside"
             android:layout_marginEnd="8dp"
-            android:contentDescription="Cancel" />
+            android:contentDescription="Add Tag" />
     </LinearLayout>
+
+    <!-- Dynamic Tags Display -->
+    <com.google.android.flexbox.FlexboxLayout
+        android:id="@+id/addedTagsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:flexWrap="wrap"
+        app:flexDirection="row"
+        app:justifyContent="flex_start"
+        android:padding="8dp"
+        android:layout_marginTop="8dp"
+        android:background="?android:attr/windowBackground">
+    </com.google.android.flexbox.FlexboxLayout>
 
     <!-- Save and Cancel Buttons -->
     <LinearLayout
@@ -80,13 +87,24 @@
             android:contentDescription="Save" />
     </LinearLayout>
 
-    <!-- Tag Suggestions RecyclerView -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/tagSuggestionsRecyclerView"
-        android:layout_width="match_parent"
+    <!-- Suggested Tags Label -->
+    <TextView
+        android:id="@+id/suggestedTagsLabel"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:clipToPadding="false"
-        android:scrollbars="vertical" />
+        android:text="Suggested Tags :"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
 
+    <!-- Suggested Tags -->
+    <com.google.android.flexbox.FlexboxLayout
+        android:id="@+id/tagSuggestionsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:flexWrap="wrap"
+        app:flexDirection="row"
+        app:justifyContent="flex_start"
+        android:padding="8dp" />
 </LinearLayout>
