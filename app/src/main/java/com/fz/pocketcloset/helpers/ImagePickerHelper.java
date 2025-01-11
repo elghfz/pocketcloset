@@ -47,22 +47,33 @@ public class ImagePickerHelper {
     public void openImagePicker() {
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType("image/*");
-        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true); // Enable multiple image selection
-        pickImageLauncher.launch(intent);
-    }
-
-    public void handleImageResult(Intent data) {
-        if (data == null) return;
 
         if (clothingId > 0) {
-            // Update logic for an existing clothing item
+            // Restrict to a single image if updating
+            pickImageLauncher.launch(intent);
+        } else {
+            // Allow multiple images if adding new clothing items
+            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+            pickImageLauncher.launch(intent);
+        }
+    }
+
+
+    public void handleImageResult(Intent data) {
+        if (data == null) {
+            Toast.makeText(context, "No image selected.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (clothingId > 0) {
+            // Update logic for a single image
             if (data.getData() != null) {
                 updateClothingImage(data.getData());
             } else {
-                Toast.makeText(context, "No image selected for update.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "Please select a single image for updating.", Toast.LENGTH_SHORT).show();
             }
         } else {
-            // Handle adding multiple or single new items
+            // Add logic for multiple images
             List<Uri> imageUris = new ArrayList<>();
             if (data.getClipData() != null) {
                 int count = data.getClipData().getItemCount();
