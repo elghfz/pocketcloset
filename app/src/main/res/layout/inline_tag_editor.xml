@@ -18,21 +18,25 @@
         android:layout_gravity="center"
         android:contentDescription="Selected image" />
 
-    <!-- Tags Input Section -->
+    <LinearLayout
+        android:id="@+id/addedTagsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingTop="16dp">
+        android:layout_marginBottom="8dp">
 
-        <!-- EditText for entering tags -->
         <EditText
-            android:id="@+id/tagsEditText"
+            android:id="@+id/newTagInput"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="Enter tags"
+            android:hint="Enter new tag"
             android:inputType="text" />
 
         <!-- Add Tag Button -->
@@ -45,19 +49,6 @@
             android:scaleType="centerInside"
             android:layout_marginEnd="8dp"
             android:contentDescription="Cancel" />
-    </LinearLayout>
-
-    <!-- Dynamic Tags Display -->
-    <LinearLayout
-        android:id="@+id/addedTagsContainer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp"
-        android:visibility="gone"
-        android:gravity="start"
-        android:layout_marginTop="8dp"
-        android:background="?android:attr/windowBackground">
     </LinearLayout>
 
     <!-- Save and Cancel Buttons -->

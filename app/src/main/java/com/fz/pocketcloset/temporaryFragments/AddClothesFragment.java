@@ -1,10 +1,12 @@
 package com.fz.pocketcloset.temporaryFragments;
 
 import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,7 +30,10 @@ import com.fz.pocketcloset.MainActivity;
 import com.fz.pocketcloset.R;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class AddClothesFragment extends Fragment {
     private ImageView imageView;
@@ -39,10 +44,11 @@ public class AddClothesFragment extends Fragment {
     private DatabaseHelper dbHelper;
     private List<ContentValues> pendingItems; // To hold all pending clothing items
 
-    private List<String> currentTags; // For dynamically added tags
+    private Set<String> currentTags; // For dynamically added tags
     private List<String> suggestedTags; // Suggested tags from the database
     private TagSuggestionsAdapter tagSuggestionsAdapter; // Adapter for the RecyclerView
     private LinearLayout addedTagsContainer; // For displaying added tags
+    private RecyclerView tagSuggestionsRecyclerView;
 
     public static AddClothesFragment newInstance(List<Uri> imageUris) {
         AddClothesFragment fragment = new AddClothesFragment();
@@ -74,31 +80,31 @@ public class AddClothesFragment extends Fragment {
         cancelButton = view.findViewById(R.id.cancelButton);
         ImageButton addTagButton = view.findViewById(R.id.addTagButton);
         addedTagsContainer = view.findViewById(R.id.addedTagsContainer);
-        RecyclerView tagSuggestionsRecyclerView = view.findViewById(R.id.tagSuggestionsRecyclerView);
+        tagSuggestionsRecyclerView = view.findViewById(R.id.tagSuggestionsRecyclerView);
 
         // Initialize tag lists
-        currentTags = new ArrayList<>();
+        currentTags = new HashSet<>();
         suggestedTags = new ArrayList<>(fetchSuggestedTags()); // Fetch tags from DB or ClothingManager
 
         // Set up the tag suggestions RecyclerView
-        tagSuggestionsAdapter = new TagSuggestionsAdapter(suggestedTags, tag -> addTag(tag));
-        tagSuggestionsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false));
+        tagSuggestionsAdapter = new TagSuggestionsAdapter(suggestedTags, tag -> {
+            addTagToContainer(tag);
+            updateSuggestions(tag);
+        });
+        tagSuggestionsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         tagSuggestionsRecyclerView.setAdapter(tagSuggestionsAdapter);
 
         // Add tag button click listener
         addTagButton.setOnClickListener(v -> {
             String inputText = tagsEditText.getText().toString().trim();
             if (!inputText.isEmpty()) {
-                String[] tags = inputText.split(","); // Split input by commas
-                for (String tag : tags) {
-                    addTag(tag.trim()); // Add each tag individually after trimming
-                }
+                addTagToContainer(inputText);
+                updateSuggestions(inputText);
                 tagsEditText.setText(""); // Clear the input field
             } else {
                 Toast.makeText(requireContext(), "Tag cannot be empty", Toast.LENGTH_SHORT).show();
             }
         });
-
 
         // Set up button listeners
         saveButton.setOnClickListener(v -> handleSaveClick());
@@ -110,7 +116,7 @@ public class AddClothesFragment extends Fragment {
         return view;
     }
 
-    private void addTag(String tag) {
+    private void addTagToContainer(String tag) {
         if (!tag.isEmpty() && !currentTags.contains(tag)) {
             currentTags.add(tag);
 
@@ -124,6 +130,7 @@ public class AddClothesFragment extends Fragment {
             tagView.setOnClickListener(v -> {
                 currentTags.remove(tag);
                 addedTagsContainer.removeView(tagView);
+                updateSuggestions(null); // Refresh suggestions
                 if (currentTags.isEmpty()) {
                     addedTagsContainer.setVisibility(View.GONE);
                 }
@@ -134,10 +141,72 @@ public class AddClothesFragment extends Fragment {
         }
     }
 
+    private void updateSuggestions(String tagToRemove) {
+        // Re-fetch combined tags from the database and pending items
+        suggestedTags.clear();
+        suggestedTags.addAll(fetchSuggestedTags());
+
+        // Remove already added tags from suggestions
+        suggestedTags.removeAll(currentTags);
+
+        // Optionally, remove the tag that was just added
+        if (tagToRemove != null) {
+            suggestedTags.remove(tagToRemove);
+        }
+
+        // Notify the adapter about changes
+        tagSuggestionsAdapter.notifyDataSetChanged();
+    }
+
 
     private List<String> fetchSuggestedTags() {
-        return new ClothingManager(requireContext()).getAllTags(); // Use the existing implementation
+        Set<String> combinedTags = new HashSet<>();
+
+        // Fetch tags from the database
+        combinedTags.addAll(new ClothingManager(requireContext()).getAllTags());
+
+        // Fetch tags from pending items
+        for (ContentValues values : pendingItems) {
+            String tags = values.getAsString("tags");
+            if (tags != null && !tags.isEmpty()) {
+                Collections.addAll(combinedTags, tags.split(","));
+            }
+        }
+
+        return new ArrayList<>(combinedTags);
     }
+
+    private void commitTransaction() {
+        ClothingManager clothingManager = new ClothingManager(requireContext());
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        db.beginTransaction(); // Start a transaction to ensure atomicity
+
+        try {
+            for (ContentValues values : pendingItems) {
+                String imagePath = values.getAsString("imagePath");
+                String tags = values.getAsString("tags");
+
+                ContentValues clothingValues = new ContentValues();
+                clothingValues.put("imagePath", imagePath);
+                clothingValues.put("tags", tags);
+
+                // Insert the clothing item into the database
+                db.insertOrThrow("CLOTHES", null, clothingValues);
+            }
+
+            db.setTransactionSuccessful(); // Mark the transaction as successful
+            Toast.makeText(requireContext(), "All items saved successfully!", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Log.e("AddClothesFragment", "Error committing transaction: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Error saving items. Transaction aborted.", Toast.LENGTH_SHORT).show();
+        } finally {
+            db.endTransaction(); // End the transaction (commit or rollback)
+        }
+
+        pendingItems.clear(); // Clear the pending items list
+        hideFragment(); // Close the fragment after saving
+    }
+
 
     private void displayCurrentImage() {
         if (currentIndex < imageUris.size()) {
@@ -178,32 +247,20 @@ public class AddClothesFragment extends Fragment {
             ContentValues values = new ContentValues();
             values.put("tags", String.join(",", currentTags)); // Save tags as a comma-separated string
             values.put("imagePath", imagePath);
-            pendingItems.add(values); // Add to the pending list
+
+            // Add to pending items
+            pendingItems.add(values);
 
             currentIndex++;
             displayCurrentImage(); // Show the next image or commit transaction if last
+
+            // Refresh suggestions to include tags from this saved item
+            updateSuggestions(null);
         } else {
             Toast.makeText(requireContext(), "Failed to save image. Please try again.", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void commitTransaction() {
-        ClothingManager clothingManager = new ClothingManager(requireContext());
-        try {
-            // Use the addMultipleClothingItems method from the existing implementation
-            List<String> tagsList = new ArrayList<>();
-            for (ContentValues values : pendingItems) {
-                tagsList.add(values.getAsString("tags"));
-            }
-
-            clothingManager.addMultipleClothingItems(imageUris, tagsList, requireContext());
-            Toast.makeText(requireContext(), "All items saved successfully!", Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            Toast.makeText(requireContext(), "Error saving items. Transaction aborted.", Toast.LENGTH_SHORT).show();
-        } finally {
-            hideFragment();
-        }
-    }
 
     private void cancelProcess() {
         pendingItems.clear(); // Discard all pending items

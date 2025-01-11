@@ -26,6 +26,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.fz.pocketcloset.items.ClothingItem;
@@ -40,9 +41,12 @@ import com.fz.pocketcloset.R;
 import com.fz.pocketcloset.items.SelectableItem;
 import com.fz.pocketcloset.temporaryFragments.SelectionAdapter;
 import com.fz.pocketcloset.temporaryFragments.SelectionFragment;
+import com.fz.pocketcloset.temporaryFragments.TagSuggestionsAdapter;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ClothingDetailFragment extends Fragment implements SelectionFragment.SelectionListener {
 
@@ -57,6 +61,10 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
     private View imageOverlay;
     private ImageButton editImageButton;
     private View backgroundClickableArea;
+
+    ImageButton addTagButton;
+
+
 
     private DatabaseHelper dbHelper;
 
@@ -94,6 +102,7 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
                     }
                 }
         );
+
     }
 
 
@@ -134,20 +143,19 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
 
             clothingImageView.setOnClickListener(v -> showEditOptions());
             editImageButton.setOnClickListener(v -> openImagePicker());
-            backgroundClickableArea.setOnClickListener(v -> hideEditOptions());
 
             ImageButton saveButton = view.findViewById(R.id.button_save);
             saveButton.setOnClickListener(v -> navigateBack());
-
-            TextView tagsLabel = view.findViewById(R.id.tagsLabel);
-            tagsLabel.setOnClickListener(v -> showEditTagsDialog());
-
 
             ImageButton addToCollectionButton = view.findViewById(R.id.button_add_to_collection);
             addToCollectionButton.setOnClickListener(v -> showAddToCollectionFragment());
 
             ImageButton deleteButton = view.findViewById(R.id.button_delete_clothing);
             deleteButton.setOnClickListener(v -> deleteClothing());
+
+            ImageButton addTagButton = view.findViewById(R.id.addTagButton);
+            addTagButton.setOnClickListener(v -> showTagsEditor());
+
 
 
 
@@ -222,83 +230,172 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
         }
     }
 
+    private void showTagsEditor() {
+        if (getView() == null) return;
 
-    private void showEditTagsDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Edit Tags");
+        View selectionContainer = getView().findViewById(R.id.selection_fragment_container);
+        View mainContent = getView().findViewById(R.id.mainContent);
 
-        final EditText input = new EditText(requireContext());
-        // Concatenate the current tags into a comma-separated string for editing
-        String currentTags = "";
-        if (tagsContainer != null && tagsContainer.getChildCount() > 0) {
-            for (int i = 0; i < tagsContainer.getChildCount(); i++) {
-                TextView tagView = (TextView) tagsContainer.getChildAt(i);
-                currentTags += tagView.getText().toString() + (i < tagsContainer.getChildCount() - 1 ? ", " : "");
+        // Hide main content and show selection container
+        mainContent.setVisibility(View.GONE);
+        selectionContainer.setVisibility(View.VISIBLE);
+
+        // Inflate the tag editor layout
+        LayoutInflater inflater = LayoutInflater.from(requireContext());
+        View editorView = inflater.inflate(R.layout.inline_tag_editor, (ViewGroup) selectionContainer, false);
+
+        ((ViewGroup) selectionContainer).removeAllViews();
+        ((ViewGroup) selectionContainer).addView(editorView);
+
+        // Initialize tag editor components
+        ImageView imageView = editorView.findViewById(R.id.imageView);
+        EditText newTagInput = editorView.findViewById(R.id.newTagInput);
+        ImageButton addTagButton = editorView.findViewById(R.id.addTagButton);
+        RecyclerView tagSuggestionsRecyclerView = editorView.findViewById(R.id.tagSuggestionsRecyclerView);
+        LinearLayout addedTagsContainer = editorView.findViewById(R.id.addedTagsContainer);
+        ImageButton saveButton = editorView.findViewById(R.id.saveButton);
+        ImageButton cancelButton = editorView.findViewById(R.id.cancelButton);
+
+        // Load clothing image into editor
+        loadImageIntoEditor(imageView);
+
+        // Step 1: Load existing tags into the container
+        ClothingManager clothingManager = new ClothingManager(requireContext());
+        ClothingItem clothing = clothingManager.getClothingById(clothingId);
+        Set<String> addedTagsSet = new HashSet<>(); // Track added tags to exclude from suggestions
+
+        if (clothing != null) {
+            String[] existingTags = clothing.getTags() != null ? clothing.getTags().split(",") : new String[0];
+            for (String tag : existingTags) {
+                addTagToContainer(tag.trim(), addedTagsContainer, tagSuggestionsRecyclerView);
+                addedTagsSet.add(tag.trim()); // Add to set for filtering
             }
         }
-        input.setText(currentTags.trim());
-        builder.setView(input);
 
-        builder.setPositiveButton("Save", (dialog, which) -> {
-            String newTags = input.getText().toString().trim();
-            if (!newTags.isEmpty()) {
-                updateClothingTags(newTags);
+        // Step 2: Initialize tag suggestions excluding already-added tags
+        List<String> suggestedTags = clothingManager.getAllTags();
+        List<String> filteredSuggestions = new ArrayList<>();
+        for (String tag : suggestedTags) {
+            if (!addedTagsSet.contains(tag)) {
+                filteredSuggestions.add(tag);
+            }
+        }
+
+
+        TagSuggestionsAdapter tagSuggestionsAdapter = new TagSuggestionsAdapter(filteredSuggestions, null);
+        tagSuggestionsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        tagSuggestionsRecyclerView.setAdapter(tagSuggestionsAdapter);
+        tagSuggestionsAdapter.setTagClickListener(tag -> {
+            addTagToContainer(tag, addedTagsContainer, tagSuggestionsRecyclerView);
+            filteredSuggestions.remove(tag);
+            tagSuggestionsAdapter.notifyDataSetChanged();
+        });
+
+
+        tagSuggestionsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        tagSuggestionsRecyclerView.setAdapter(tagSuggestionsAdapter);
+
+        // Handle adding a new tag
+        addTagButton.setOnClickListener(v -> {
+            String tagText = newTagInput.getText().toString().trim();
+            if (!tagText.isEmpty()) {
+                addTagToContainer(tagText, addedTagsContainer, tagSuggestionsRecyclerView);
+                newTagInput.setText("");
             } else {
-                Toast.makeText(requireContext(), "Tags cannot be empty!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "Tag cannot be empty", Toast.LENGTH_SHORT).show();
             }
         });
 
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-        builder.show();
+        // Save tags
+        saveButton.setOnClickListener(v -> {
+            List<String> newTags = getTagsFromContainer(addedTagsContainer);
+            updateClothingTags(String.join(",", newTags));
+            hideTagsEditor();
+        });
+
+        // Cancel editing
+        cancelButton.setOnClickListener(v -> hideTagsEditor());
     }
+
+    private void addTagToContainer(String tag, LinearLayout container, RecyclerView tagSuggestionsRecyclerView) {
+        for (int i = 0; i < container.getChildCount(); i++) {
+            TextView existingTag = (TextView) container.getChildAt(i);
+            if (existingTag.getText().toString().equalsIgnoreCase(tag)) {
+                Toast.makeText(requireContext(), "Tag already added", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+
+        TextView tagView = new TextView(requireContext());
+        tagView.setText(tag);
+        tagView.setPadding(16, 8, 16, 8);
+        tagView.setBackgroundResource(R.drawable.tag_background);
+
+        tagView.setOnClickListener(v -> {
+            container.removeView(tagView); // Remove tag from container
+            // Add back to suggestions
+            TagSuggestionsAdapter adapter = (TagSuggestionsAdapter) tagSuggestionsRecyclerView.getAdapter();
+            if (adapter != null) {
+                adapter.addTag(tag);
+            }
+        });
+
+        container.addView(tagView);
+        container.setVisibility(View.VISIBLE);
+    }
+
+
+
+    private List<String> getTagsFromContainer(LinearLayout container) {
+        List<String> tags = new ArrayList<>();
+        for (int i = 0; i < container.getChildCount(); i++) {
+            TextView tagView = (TextView) container.getChildAt(i);
+            tags.add(tagView.getText().toString().trim());
+        }
+        return tags;
+    }
+
+
+
+    private void loadImageIntoEditor(ImageView imageView) {
+        try {
+            ClothingManager clothingManager = new ClothingManager(requireContext());
+            String imagePath = clothingManager.getClothingById(clothingId).getImagePath();
+            if (imagePath != null) {
+                imageView.setImageURI(Uri.parse(imagePath));
+            } else {
+                imageView.setImageResource(R.drawable.placeholder_clothing_item); // Fallback for no image
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading image into editor: " + e.getMessage(), e);
+            imageView.setImageResource(R.drawable.placeholder_clothing_item);
+        }
+    }
+
+
+    private void hideTagsEditor() {
+        if (getView() == null) return;
+
+        View selectionContainer = getView().findViewById(R.id.selection_fragment_container);
+        View mainContent = getView().findViewById(R.id.mainContent);
+
+        selectionContainer.setVisibility(View.GONE);
+        mainContent.setVisibility(View.VISIBLE);
+    }
+
+
 
 
     private void updateClothingTags(String newTags) {
         try {
-            // Update the clothing item in the database
             new ClothingManager(requireContext()).updateClothingItem(clothingId, newTags);
-
-            // Ensure the tagsContainer is cleared and updated dynamically
-            if (getView() == null) {
-                Log.e(TAG, "View is not ready. Skipping tag update.");
-                return;
-            }
-
-            tagsContainer.removeAllViews(); // Clear previous views
-
-            String[] tagsArray = newTags != null ? newTags.split(",") : new String[0];
-
-            for (String tag : tagsArray) {
-                TextView tagView = new TextView(requireContext());
-                tagView.setText(tag.trim());
-                tagView.setTextSize(14);
-                tagView.setTextColor(ResourcesCompat.getColor(getResources(), android.R.color.primary_text_dark, requireContext().getTheme()));
-                tagView.setPadding(16, 8, 16, 8); // Padding for the oval shape
-                tagView.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.tag_background, requireContext().getTheme()));
-
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT
-                );
-                params.setMargins(8, 4, 8, 4); // Margins between tags
-                tagView.setLayoutParams(params);
-
-                tagsContainer.addView(tagView); // Add tag to container
-            }
-
-            Toast.makeText(requireContext(), "Tags updated!", Toast.LENGTH_SHORT).show();
-
-            if (getActivity() instanceof MainActivity) {
-                MainActivity mainActivity = (MainActivity) getActivity();
-                mainActivity.refreshClothingList();
-            }
-
-
+            reloadData();
         } catch (Exception e) {
             Log.e(TAG, "Error updating clothing tags: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Failed to update tags.", Toast.LENGTH_SHORT).show();
         }
     }
+
 
     private void showAddToCollectionFragment() {
         List<Collection> availableCollections = new CollectionsManager(requireContext())
@@ -475,11 +572,13 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
     private void showEditOptions() {
         imageOverlay.setVisibility(View.VISIBLE);
         editImageButton.setVisibility(View.VISIBLE);
+        backgroundClickableArea.setOnClickListener(v -> hideEditOptions());
     }
 
     private void hideEditOptions() {
         imageOverlay.setVisibility(View.GONE);
         editImageButton.setVisibility(View.GONE);
+        backgroundClickableArea.setOnClickListener(null);
     }
 
     private void openImagePicker() {
@@ -542,16 +641,15 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
     public void reloadData() {
         try {
             Log.d(TAG, "Reloading clothing details...");
-            loadClothingDetails(); // Reuse the existing method to reload data
+            if (getView() != null) {
+                tagsContainer.removeAllViews();
+                loadClothingDetails();
+            }
         } catch (Exception e) {
             Log.e(TAG, "Error reloading clothing data: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Failed to reload clothing details.", Toast.LENGTH_SHORT).show();
         }
     }
-
-
-
-
 
 
 
