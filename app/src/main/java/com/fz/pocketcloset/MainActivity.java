@@ -8,12 +8,14 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.fz.pocketcloset.detailFragments.ClothingDetailFragment;
 import com.fz.pocketcloset.detailFragments.CollectionDetailFragment;
 import com.fz.pocketcloset.mainFragments.ClothingFragment;
 import com.fz.pocketcloset.mainFragments.CollectionsFragment;
+import com.fz.pocketcloset.mainFragments.OutfitsFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
@@ -76,6 +78,19 @@ public class MainActivity extends AppCompatActivity {
             refreshCollections();
         }
     }
+
+    public void refreshOutfitsFragment() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        Fragment fragment = fragmentManager.findFragmentByTag("f1"); // Assuming OutfitsFragment is at index 1 in the ViewPager2
+
+        if (fragment instanceof OutfitsFragment) {
+            ((OutfitsFragment) fragment).reloadOutfits();
+        } else {
+            Log.e("MainActivity", "OutfitsFragment not found.");
+        }
+    }
+
+
 
     /**
      * Handles deletion of a clothing item.

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Space at the top -->
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="90dp" />
+
+    <!-- Container for canvas and border -->
+    <FrameLayout
+        android:id="@+id/borderContainer"
+        android:layout_width="288dp"
+        android:layout_height="480dp"
+        android:layout_gravity="center"
+        android:background="@drawable/canvas_border"> <!-- Border applied here -->
+
+        <!-- Canvas for dragging and resizing images -->
+        <FrameLayout
+            android:id="@+id/canvasContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+            <!-- Canvas content goes here -->
+        </FrameLayout>
+    </FrameLayout>
+
+    <!-- Buttons for saving or canceling the outfit creation -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingTop="36dp">
+
+        <ImageButton
+            android:id="@+id/buttonCancel"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:background="@drawable/circular_button"
+            android:src="@drawable/cancel_icon"
+            android:scaleType="centerInside"
+            android:layout_marginEnd="8dp"
+            android:contentDescription="Cancel" />
+
+        <ImageButton
+            android:id="@+id/buttonSave"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:background="@drawable/circular_button"
+            android:src="@drawable/save_icon"
+            android:scaleType="centerInside"
+            android:contentDescription="Save" />
+    </LinearLayout>
+</LinearLayout>

@@ -1,17 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
     android:orientation="vertical"
     android:padding="10dp">
 
+    <!-- Dynamic Fragment Container -->
+    <FrameLayout
+        android:id="@+id/dynamic_fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+    <!-- Space at the top -->
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="120dp" />
+
+    <!-- Title -->
     <TextView
-        android:id="@+id/outfits_text"
-        android:layout_width="wrap_content"
+        android:id="@+id/titleText"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Under construction 🛠️"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+        android:text="Browse your outfits..."
+        android:textSize="20sp"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Space between the title and the outfit list -->
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="26dp" />
+
+    <!-- RecyclerView -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/outfitRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="451dp"
+        android:clipToPadding="false"
+        android:padding="8dp"
+        app:spanCount="1"
+        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager" />
+
+    <!-- Action Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end"
+        android:paddingTop="8dp">
+
+        <!-- Add Outfit Button -->
+        <ImageButton
+            android:id="@+id/addOutfitButton"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:background="@drawable/circular_button"
+            android:scaleType="centerInside"
+            android:src="@drawable/add_icon"
+            android:contentDescription="Add Outfit"
+            android:layout_marginEnd="8dp" />
+
+        <!-- Delete Button -->
+        <ImageButton
+            android:id="@+id/deleteButton"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:background="@drawable/circular_button"
+            android:scaleType="centerInside"
+            android:src="@drawable/delete_icon"
+            android:contentDescription="Delete Outfit"
+            android:visibility="gone" />
+    </LinearLayout>
 </LinearLayout>
