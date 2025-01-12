@@ -11,54 +11,54 @@ The Digital Closet App is designed to help you manage your wardrobe effortlessly
 
 ## Usage
 #### Adding clothes process :
-<video width="800" height="450" controls autoplay loop muted>
+<video controls autoplay loop muted>
   <source src="https://i.imgur.com/3HH7Uu2.mp4" type="video/mp4">
 </video>
 
 #### Outfit creation process : 
-<video width="800" height="450" controls autoplay loop muted>
+<video controls autoplay loop muted>
   <source src="https://i.imgur.com/V15gdtW.mp4" type="video/mp4">
 </video>
 
 #### Clothing management :
 **Filtering with tags :**
 
-<video width="800" height="450" controls autoplay loop muted>
+<video controls autoplay loop muted>
   <source src="https://i.mgur.com/EQcYo1z.mp4" type="video/mp4">
 </video>
 
 **Deleting :**
 
-<video width="800" height="450" controls autoplay loop muted>
+<video controls autoplay loop muted>
   <source src="https://i.mgur.com/mKKtm8D.mp4" type="video/mp4">
 </video>
 
 **Editing :**
 
-<video width="800" height="450" controls autoplay loop muted>
+<video controls autoplay loop muted>
   <source src="https://i.imgur.com/M3fkn9L.mp4" type="video/mp4">
 </video>
 
-<video width="800" height="450" controls autoplay loop muted>
+<video controls autoplay loop muted>
   <source src="https://i.imgur.com/tACN3DP.mp4" type="video/mp4">
 </video>
 
 #### Collection management :
 **Creation, adding clothes in different ways :**
 
-<video width="800" height="450" controls autoplay loop muted>
+<video controls autoplay loop muted>
   <source src="https://i.imgur.com/wkW80jm.mp4" type="video/mp4">
 </video>
 
 **Deleting :**
 
-<video width="800" height="450" controls autoplay loop muted>
+<video controls autoplay loop muted>
   <source src="https://i.imgur.com/BZEW4aH.mp4" type="video/mp4">
 </video>
 
 **Editing :**
 
-<video width="800" height="450" controls autoplay loop muted>
+<video controls autoplay loop muted>
   <source src="https://i.imgur.com/Z9jnlho.mp4" type="video/mp4">
 </video>
 
