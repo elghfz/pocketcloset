@@ -12,34 +12,35 @@ The Digital Closet App is designed to help you manage your wardrobe effortlessly
 ## Usage
 
 ### Adding clothes process :
-![](./demo/addclothesdemo.gif)
+<img src="./demo/addclothesdemo.gif" alt="Adding clothes demo" width="400" />
 
 ### Outfit creation process : 
-![](./demo/outfitcreationdemo.gif)
+<img src="./demo/outfitcreationdemo.gif" alt="Outfit creation demo" width="400" />
 
 ### Clothing management :
 **Filtering with tags :**
 
-![](./demo/filteringdemo.gif)
+<img src="./demo/filteringdemo.gif" alt="Filtering demo" width="400" />
 
 **Deleting :**
 
-![](./demo/deleteclothingdemo.gif)
+<img src="./demo/deleteclothingdemo.gif" alt="Deleting demo" width="400" />
+
 **Editing :**
 
-![](./demo/tageditingdemo.gif)
+<img src="./demo/tageditingdemo.gif" alt="Tag editing demo" width="400" />
 
-![](./demo/clothingimageeditingdemo.gif)
+<img src="./demo/clothingimageeditingdemo.gif" alt="Image editing demo" width="400" />
 
 ### Collection management :
 **Creation, adding clothes in different ways :**
-![](./demo/collectioncreationandpopulating.gif)
+<img src="./demo/collectioncreationandpopulatingdemo.gif" alt="Collection management demo" width="400" />
 
 **Deleting :**
-![](./demo/collectiondeletiondemo.gif)
+<img src="./demo/collectiondeletiondemo.gif" alt="Collection deletion demo" width="400" />
 
 **Editing :**
-![](./demo/collectioneditingdemo.gif)
+<img src="./demo/collectioneditingdemo.gif" alt="Collection editing demo" width="400" />
 
 ## Roadmap
 - **Integrated Background Remover**: Automatically remove backgrounds from clothing images.
