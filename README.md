@@ -10,59 +10,36 @@ The Digital Closet App is designed to help you manage your wardrobe effortlessly
 - **Create Outfits**: Use the drag-and-drop interface to create and save outfits.
 
 ## Usage
-#### Adding clothes process :
-<video controls autoplay loop muted>
-  <source src="https://i.imgur.com/3HH7Uu2.mp4" type="video/mp4">
-</video>
 
-#### Outfit creation process : 
-<video controls autoplay loop muted>
-  <source src="https://i.imgur.com/V15gdtW.mp4" type="video/mp4">
-</video>
+### Adding clothes process :
+![](./demo/addclothesdemo.gif)
 
-#### Clothing management :
+### Outfit creation process : 
+![](./demo/outfitcreationdemo.gif)
+
+### Clothing management :
 **Filtering with tags :**
 
-<video controls autoplay loop muted>
-  <source src="https://i.mgur.com/EQcYo1z.mp4" type="video/mp4">
-</video>
+![](./demo/filteringdemo.gif)
 
 **Deleting :**
 
-<video controls autoplay loop muted>
-  <source src="https://i.mgur.com/mKKtm8D.mp4" type="video/mp4">
-</video>
-
+![](./demo/deleteclothingdemo.gif)
 **Editing :**
 
-<video controls autoplay loop muted>
-  <source src="https://i.imgur.com/M3fkn9L.mp4" type="video/mp4">
-</video>
+![](./demo/tageditingdemo.gif)
 
-<video controls autoplay loop muted>
-  <source src="https://i.imgur.com/tACN3DP.mp4" type="video/mp4">
-</video>
+![](./demo/clothingimageeditingdemo.gif)
 
-#### Collection management :
+### Collection management :
 **Creation, adding clothes in different ways :**
-
-<video controls autoplay loop muted>
-  <source src="https://i.imgur.com/wkW80jm.mp4" type="video/mp4">
-</video>
+![](./demo/collectioncreationandpopulating.gif)
 
 **Deleting :**
-
-<video controls autoplay loop muted>
-  <source src="https://i.imgur.com/BZEW4aH.mp4" type="video/mp4">
-</video>
+![](./demo/collectiondeletiondemo.gif)
 
 **Editing :**
-
-<video controls autoplay loop muted>
-  <source src="https://i.imgur.com/Z9jnlho.mp4" type="video/mp4">
-</video>
-
-#### 
+![](./demo/collectioneditingdemo.gif)
 
 ## Roadmap
 - **Integrated Background Remover**: Automatically remove backgrounds from clothing images.
