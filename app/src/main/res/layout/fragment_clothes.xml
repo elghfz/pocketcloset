@@ -3,7 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="10dp">
+    android:padding="10dp"
+    android:animateLayoutChanges="true">
 
     <!-- Dynamic Fragment Container -->
     <FrameLayout
@@ -35,10 +36,11 @@
         android:paddingBottom="24dp"
         android:text="Welcome to your\nPocketCloset!"
         android:textAlignment="center"
-        android:textSize="24sp"
+        android:textSize="25sp"
         android:textStyle="bold"
         android:lineSpacingExtra="4dp"
-        android:textColor="?android:attr/textColorPrimary" />
+        android:textColor="?android:attr/textColorPrimary"
+        android:animation="@anim/fade_in"/>
 
     <!-- Space between the title and grid view -->
     <Space
@@ -106,7 +108,7 @@
     <!-- Space between the buttons and grid view -->
     <Space
         android:layout_width="match_parent"
-        android:layout_height="36dp" />
+        android:layout_height="26dp" />
 
     <!-- Bottom Buttons -->
     <LinearLayout
@@ -114,7 +116,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="end"
-        android:paddingTop="8dp">
+        android:paddingTop="2dp">
 
         <!-- Add Clothes Button -->
         <ImageButton

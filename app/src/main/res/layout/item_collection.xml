@@ -106,7 +106,8 @@
         android:text="📁"
         android:textSize="20sp"
         android:paddingTop="2dp"
-        android:paddingBottom="2dp" />
+        android:paddingBottom="2dp"
+        android:textColor="?android:attr/textColorPrimary"/>
 
     <!-- Collection Name -->
     <TextView

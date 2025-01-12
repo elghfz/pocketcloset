@@ -88,7 +88,7 @@
                     app:justifyContent="flex_start"
                     android:padding="8dp"
                     android:layout_marginTop="8dp"
-                    android:textColor="?attr/tag_text_color"
+                    android:textColor="?android:attr/textColorPrimary"
                     android:background="?android:attr/windowBackground" />
 
 

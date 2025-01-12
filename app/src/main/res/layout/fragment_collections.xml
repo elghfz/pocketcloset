@@ -4,7 +4,8 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:padding="10dp">
+    android:padding="10dp"
+    android:animateLayoutChanges="true">
 
     <FrameLayout
         android:id="@+id/dynamic_fragment_container"
@@ -23,15 +24,19 @@
         android:id="@+id/titleText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Browse your collections..."
-        android:textSize="20sp"
+        android:text="Browse your \n collections..."
+        android:textSize="25sp"
+        android:textStyle="bold"
         android:gravity="center"
-        android:layout_marginBottom="16dp" />
+        android:textColor="?android:attr/textColorPrimary"
+        android:lineSpacingExtra="4dp"
+        android:layout_marginBottom="16dp"
+        android:animation="@anim/fade_in"/>
 
     <!-- Space between the title and the collection list -->
     <Space
         android:layout_width="match_parent"
-        android:layout_height="26dp" />
+        android:layout_height="16dp" />
 
     <!-- RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
@@ -50,7 +55,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="end"
-        android:paddingTop="8dp">
+        android:paddingTop="2dp">
 
         <!-- Add Collection Button -->
         <ImageButton
