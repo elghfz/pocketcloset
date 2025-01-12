@@ -274,7 +274,6 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
                 outfitsRecyclerView.setVisibility(View.VISIBLE); // Ensure RecyclerView is visible
             } else {
                 outfitsRecyclerView.setVisibility(View.GONE); // Hide if no outfits are found
-                Toast.makeText(requireContext(), "No outfits found for this clothing item.", Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
             Log.e(TAG, "Error loading outfits for clothing: " + e.getMessage(), e);

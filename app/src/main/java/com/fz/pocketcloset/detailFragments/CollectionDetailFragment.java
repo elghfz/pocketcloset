@@ -211,32 +211,22 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
         if (isSelectionMode) {
             toggleItemSelection(item);
         } else {
+            // Handle normal click behavior (e.g., opening detail view)
             if (getActivity() instanceof MainActivity) {
                 MainActivity mainActivity = (MainActivity) getActivity();
-
-                // Call openClothingDetail with the required parameters
-                mainActivity.openClothingDetail(
-                        item.getId(),                        // clothingId
-                        "CollectionDetailFragment",          // originTag
-                        collectionId,                        // collectionId (retrieved from the fragment's state)
-                        collectionName                       // collectionName (retrieved from the fragment's state)
-                );
+                mainActivity.openClothingDetail(item.getId(), "CollectionDetailFragment", collectionId, collectionName);
             }
         }
     }
 
-
-
     private void handleItemLongClick(ClothingItem item) {
-        if (item == null) {
-            exitSelectionMode();
-            return;
-        }
         if (!isSelectionMode) {
             isSelectionMode = true;
+            Log.d(TAG, "Entering selection mode.");
             updateButtonVisibility();
         }
         toggleItemSelection(item);
+        Log.d(TAG, "After long click, selected items: " + selectedItems);
     }
 
     private void toggleItemSelection(ClothingItem item) {
@@ -246,12 +236,13 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
             selectedItems.add(item);
         }
 
-        if (selectedItems.isEmpty()) {
-            exitSelectionMode();
-        }
+        // Log for debugging
+        Log.d(TAG, "Selected Items After Toggling: " + selectedItems);
 
+        // Ensure adapter is refreshed
         adapter.notifyDataSetChanged();
     }
+
 
     private void exitSelectionMode() {
         isSelectionMode = false;
@@ -273,20 +264,44 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
         }
     }
 
+
     private void removeSelectedFromCollection() {
-        for (ClothingItem item : selectedItems) {
-            new CollectionsManager(requireContext())
-                    .removeClothingFromCollection(item.getId(), collectionId);
-        }
-        Toast.makeText(requireContext(), "Items removed from collection!", Toast.LENGTH_SHORT).show();
-        exitSelectionMode();
-        reloadClothesInCollection();
-        if (getActivity() instanceof MainActivity) {
-            MainActivity mainActivity = (MainActivity) getActivity();
-            mainActivity.refreshCollections();
+        SQLiteDatabase db = null;
+
+        try {
+            Set<ClothingItem> selectedItems = adapter.getSelectedItems(); // Always use adapter
+            Log.d(TAG, "Selected items for removal: " + selectedItems);
+
+            db = new DatabaseHelper(requireContext()).getWritableDatabase();
+            db.beginTransaction();
+
+            for (ClothingItem item : selectedItems) {
+                new CollectionsManager(requireContext())
+                        .removeClothingFromCollection(item.getId(), collectionId, db);
+            }
+
+            db.setTransactionSuccessful();
+            Toast.makeText(requireContext(), "Selected items removed!", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Log.e(TAG, "Error removing items: " + e.getMessage(), e);
+        } finally {
+            if (db != null) {
+                db.endTransaction();
+                db.close();
+            }
+            if (getActivity() instanceof MainActivity) {
+                MainActivity mainActivity = (MainActivity) getActivity();
+                mainActivity.refreshCollections();
+            }
         }
 
+        exitSelectionMode();
+        reloadClothesInCollection();
     }
+
+
+
+
 
 
 

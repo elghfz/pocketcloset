@@ -75,42 +75,35 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
         // Bind the clothing image
         holder.imageView.setImageURI(item.getImagePath() != null ? Uri.parse(item.getImagePath()) : null);
 
-        // Handle short click for editing or toggling selection
+        // Synchronize the checkbox with selection state
+        boolean isSelected = selectedItems.contains(item);
+        holder.selectCheckbox.setVisibility(selectionMode ? View.VISIBLE : View.GONE);
+        holder.selectCheckbox.setChecked(isSelected);
+
+        // Handle item clicks
         holder.itemView.setOnClickListener(v -> {
-            if (!selectionMode) {
-                onItemClickListener.onItemClick(item); // Normal item click
+            if (selectionMode) {
+                toggleSelection(item);
             } else {
-                toggleSelection(item, holder);
+                onItemClickListener.onItemClick(item);
             }
         });
 
-        // Handle long click to enter selection mode
+        // Handle long clicks to enter selection mode
         holder.itemView.setOnLongClickListener(v -> {
             if (!selectionMode) {
                 selectionMode = true;
-                setSelectionMode(true);
-                toggleSelection(item, holder);
-                onItemLongClickListener.onItemLongClick(item); // Notify fragment
+                notifyDataSetChanged(); // Refresh UI to show checkboxes
             }
+            toggleSelection(item);
+            onItemLongClickListener.onItemLongClick(item);
             return true;
         });
 
-        // Manage checkbox visibility and state
-        holder.selectCheckbox.setVisibility(selectionMode ? View.VISIBLE : View.GONE);
-        holder.selectCheckbox.setChecked(selectedItems.contains(item));
-        holder.selectCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (isChecked) {
-                selectedItems.add(item);
-            } else {
-                selectedItems.remove(item);
-            }
-
-            // Exit selection mode if no items are selected
-            if (selectedItems.isEmpty()) {
-                onItemLongClickListener.onItemLongClick(null); // Notify fragment to exit selection mode
-            }
-        });
+        // Handle checkbox clicks
+        holder.selectCheckbox.setOnClickListener(v -> toggleSelection(item));
     }
+
 
     public void updateData(List<ClothingItem> newData) {
         Log.d(TAG, "Updating adapter data. New item count: " + newData.size());
@@ -132,26 +125,31 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.Clothi
         return clothingList != null ? clothingList.size() : 0;
     }
 
-
     public void setSelectionMode(boolean selectionMode) {
         this.selectionMode = selectionMode;
     }
 
 
-    private void toggleSelection(ClothingItem item, ClothingViewHolder holder) {
+    private void toggleSelection(ClothingItem item) {
         if (selectedItems.contains(item)) {
             selectedItems.remove(item);
-            holder.selectCheckbox.setChecked(false);
         } else {
             selectedItems.add(item);
-            holder.selectCheckbox.setChecked(true);
         }
+
+        // Log the current selection for debugging
+        Log.d(TAG, "toggleSelection - Selected Items: " + selectedItems);
+
+        // Ensure the adapter reflects the updated selection
+        notifyDataSetChanged();
     }
+
 
     // Retrieve selected items
     public Set<ClothingItem> getSelectedItems() {
-        return selectedItems;
+        return new HashSet<>(selectedItems); // Return a copy of selected items
     }
+
 
     // ViewHolder class for binding views
     static class ClothingViewHolder extends RecyclerView.ViewHolder {

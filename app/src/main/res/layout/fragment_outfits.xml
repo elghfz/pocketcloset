@@ -26,7 +26,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="What are we \n wearing today ?"
-        android:textColor="?android:attr/textColorPrimary"
         android:textSize="25sp"
         android:textStyle="bold"
         android:gravity="center"
@@ -43,7 +42,8 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/outfitRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="451dp"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:clipToPadding="false"
         android:padding="8dp"
         app:spanCount="2"

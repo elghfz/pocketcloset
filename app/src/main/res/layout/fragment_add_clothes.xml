@@ -5,39 +5,37 @@
     android:orientation="vertical"
     android:padding="16dp">
 
+    <!-- Space at the top -->
     <Space
         android:layout_width="match_parent"
-        android:layout_height="26dp" />
+        android:layout_height="15dp" />
 
-    <!-- ImageView for displaying the current image -->
+    <!-- Image View for displaying the current image -->
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
+        android:layout_width="180dp"
+        android:layout_height="180dp"
         android:scaleType="centerCrop"
         android:layout_gravity="center"
         android:contentDescription="Selected image" />
 
-    <!-- Scrollable Section -->
+    <!-- Scrollable Content Section -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:overScrollMode="never">
-
+        android:layout_weight="1">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Tags Input Section -->
+            <!-- Input Section -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingTop="16dp">
+                android:layout_marginBottom="6dp">
 
                 <!-- EditText for entering tags -->
                 <EditText
@@ -45,7 +43,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:hint="Enter tags"
+                    android:hint="Enter new tag"
                     android:inputType="text" />
 
                 <!-- Add Tag Button -->
@@ -57,7 +55,7 @@
                     android:src="@drawable/add_tag_icon"
                     android:scaleType="centerInside"
                     android:layout_marginEnd="8dp"
-                    android:contentDescription="Cancel" />
+                    android:contentDescription="Add Tag" />
             </LinearLayout>
 
             <!-- Dynamic Tags Display -->
@@ -65,12 +63,13 @@
                 android:id="@+id/addedTagsContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="?android:attr/textColorPrimary"
                 app:flexWrap="wrap"
                 app:flexDirection="row"
                 app:justifyContent="flex_start"
                 android:padding="8dp"
                 android:layout_marginTop="8dp"
-                android:textColor="?android:attr/textColorPrimary"/>
+                android:background="?android:attr/windowBackground" />
 
             <!-- Save and Cancel Buttons -->
             <LinearLayout
@@ -103,6 +102,7 @@
 
             <!-- Suggested Tags Label -->
             <TextView
+                android:id="@+id/suggestedTagsLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
@@ -119,8 +119,8 @@
                 app:flexWrap="wrap"
                 app:flexDirection="row"
                 app:justifyContent="flex_start"
-                android:padding="8dp"
-                android:textColor="?android:attr/textColorPrimary"/>
+                android:textColor="?android:attr/textColorPrimary"
+                android:padding="8dp" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

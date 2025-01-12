@@ -16,6 +16,16 @@
         android:orientation="vertical"
         android:gravity="center"
         android:layout_marginBottom="36dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Pick a name and an emoji !"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:lineSpacingExtra="4dp"
+            android:layout_marginBottom="16dp"
+            android:animation="@anim/fade_in"/>
     <!-- Emoji -->
     <TextView
         android:id="@+id/collectionEmojiTextView"

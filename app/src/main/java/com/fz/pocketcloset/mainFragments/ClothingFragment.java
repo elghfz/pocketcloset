@@ -234,58 +234,61 @@ public class ClothingFragment extends Fragment implements SelectionFragment.Sele
 
 
     private void handleItemLongClick(ClothingItem item) {
-        Log.d(TAG, "handleItemLongClick: isSelectionMode=" + isSelectionMode + ", item=" + item);
-        if (item == null) {
-            exitSelectionMode();
-            return;
-        }
         if (!isSelectionMode) {
             isSelectionMode = true;
+            adapter.setSelectionMode(true); // Enable selection mode in the adapter
+            adapter.notifyDataSetChanged(); // Refresh UI to show checkboxes
             updateButtonVisibility();
         }
-        toggleItemSelection(item);
+
+        toggleItemSelection(item); // Add or remove the item from the selection
+        Log.d(TAG, "handleItemLongClick - Current Selected Items: " + selectedItems);
     }
 
+
     private void toggleItemSelection(ClothingItem item) {
-        Log.d(TAG, "toggleItemSelection: item=" + item + ", isSelectionMode=" + isSelectionMode);
         if (selectedItems.contains(item)) {
             selectedItems.remove(item);
         } else {
             selectedItems.add(item);
         }
 
-        if (selectedItems.isEmpty() && isSelectionMode) {
-            Log.d(TAG, "toggleItemSelection: No items selected. Exiting selection mode.");
-            exitSelectionMode();
-        }
+        Log.d(TAG, "toggleItemSelection - Current Selected Items: " + selectedItems);
 
-        recyclerView.post(adapter::notifyDataSetChanged);
+        // Notify adapter to update the UI
+        adapter.notifyDataSetChanged();
     }
 
+
     private void exitSelectionMode() {
-        Log.d(TAG, "exitSelectionMode: Clearing selection state and resetting UI.");
         isSelectionMode = false;
         selectedItems.clear();
         adapter.setSelectionMode(false);
-        adapter.clearSelections(); // Clear any selection state in the adapter
+        adapter.clearSelections(); // Clear selection state in the adapter
 
         updateButtonVisibility();
     }
 
     private void deleteSelectedItems() {
         try {
+            // Use the adapter's selected items
+            Set<ClothingItem> selectedItems = adapter.getSelectedItems();
+            if (selectedItems.isEmpty()) {
+                Toast.makeText(requireContext(), "No items selected for deletion.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             List<Integer> idsToDelete = new ArrayList<>();
             List<Integer> linkedOutfitIds = new ArrayList<>();
             SQLiteDatabase db = new DatabaseHelper(requireContext()).getReadableDatabase();
 
-            // Collect all clothing IDs to delete
+            // Collect IDs to delete
             for (ClothingItem item : selectedItems) {
                 idsToDelete.add(item.getId());
 
-                // Fetch linked outfits for each clothing item
+                // Fetch linked outfits
                 String query = "SELECT outfit_id FROM Clothes_Outfits WHERE clothes_id = ?";
                 Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(item.getId())});
-
                 if (cursor != null) {
                     while (cursor.moveToNext()) {
                         int outfitId = cursor.getInt(0);
@@ -306,23 +309,18 @@ public class ClothingFragment extends Fragment implements SelectionFragment.Sele
             }
 
             Toast.makeText(requireContext(), "Items and associated outfits deleted!", Toast.LENGTH_SHORT).show();
+
+            // Exit selection mode
             exitSelectionMode();
 
-            // Update clothing list and filtered list
-            clothingList = clothingManager.getAllClothingItems();
-            filteredClothingList = new ArrayList<>(clothingList);
+            // Reload data and update adapter
+            reloadData();
 
-            // Update adapter and reset filter visibility
-            recyclerView.post(() -> {
-                adapter.updateData(filteredClothingList);
-                adapter.notifyDataSetChanged();
-                updateClearFilterButtonVisibility(Collections.emptySet()); // Reset filter visibility
-            });
-
-            // Refresh outfits fragment
+            // Refresh related fragments
             if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).refreshCollections();
-                ((MainActivity) getActivity()).refreshOutfitsFragment(); // Refresh outfits fragment
+                MainActivity mainActivity = (MainActivity) getActivity();
+                mainActivity.refreshCollections();
+                mainActivity.refreshOutfitsFragment();
             }
 
         } catch (Exception e) {
@@ -330,6 +328,7 @@ public class ClothingFragment extends Fragment implements SelectionFragment.Sele
             Toast.makeText(requireContext(), "Error deleting items.", Toast.LENGTH_SHORT).show();
         }
     }
+
 
 
 

@@ -34,12 +34,11 @@
         android:layout_gravity="center_horizontal"
         android:gravity="center"
         android:paddingBottom="24dp"
-        android:text="Welcome to your\nPocketCloset!"
+        android:text="Welcome to your\nPocketCloset !"
         android:textAlignment="center"
         android:textSize="25sp"
         android:textStyle="bold"
         android:lineSpacingExtra="4dp"
-        android:textColor="?android:attr/textColorPrimary"
         android:animation="@anim/fade_in"/>
 
     <!-- Space between the title and grid view -->
