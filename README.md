@@ -10,7 +10,59 @@ The Digital Closet App is designed to help you manage your wardrobe effortlessly
 - **Create Outfits**: Use the drag-and-drop interface to create and save outfits.
 
 ## Usage
-To see the app in action, check out the [video/gif](#) demonstrating its features.
+#### Adding clothes process :
+<video width="800" height="450" controls autoplay loop muted>
+  <source src="https://imgur.com/a/3HH7Uu2" type="video/mp4">
+</video>
+
+#### Outfit creation process : 
+<video width="800" height="450" controls autoplay loop muted>
+  <source src="https://imgur.com/a/V15gdtW" type="video/mp4">
+</video>
+
+#### Clothing management :
+**Filtering with tags :**
+
+<video width="800" height="450" controls autoplay loop muted>
+  <source src="https://imgur.com/a/EQcYo1z" type="video/mp4">
+</video>
+
+**Deleting :**
+
+<video width="800" height="450" controls autoplay loop muted>
+  <source src="https://imgur.com/a/mKKtm8D" type="video/mp4">
+</video>
+
+**Editing :**
+
+<video width="800" height="450" controls autoplay loop muted>
+  <source src="https://imgur.com/a/M3fkn9L" type="video/mp4">
+</video>
+
+<video width="800" height="450" controls autoplay loop muted>
+  <source src="https://imgur.com/a/tACN3DP" type="video/mp4">
+</video>
+
+#### Collection management :
+**Creation, adding clothes in different ways :**
+
+<video width="800" height="450" controls autoplay loop muted>
+  <source src="https://imgur.com/a/wkW80jm" type="video/mp4">
+</video>
+
+**Deleting :**
+
+<video width="800" height="450" controls autoplay loop muted>
+  <source src="https://imgur.com/a/BZEW4aH" type="video/mp4">
+</video>
+
+**Editing :**
+
+<video width="800" height="450" controls autoplay loop muted>
+  <source src="https://imgur.com/Z9jnlho" type="video/mp4">
+</video>
+
+#### 
 
 ## Roadmap
 - **Integrated Background Remover**: Automatically remove backgrounds from clothing images.
@@ -20,9 +72,6 @@ To see the app in action, check out the [video/gif](#) demonstrating its feature
 1. Clone the repository.
 2. Open the project in your preferred IDE.
 3. Run the app on your device or emulator.
-
-## Contributing
-Feel free to fork the repository and submit pull requests. For major changes, please open an issue first to discuss what you would like to change.
 
 ## License
 This project is licensed under the MIT License.
