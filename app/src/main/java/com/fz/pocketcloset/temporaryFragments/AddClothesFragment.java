@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -68,6 +69,7 @@ public class AddClothesFragment extends Fragment {
         }
         dbHelper = new DatabaseHelper(requireContext());
         pendingItems = new ArrayList<>();
+        suggestedTags = fetchSuggestedTags();
     }
 
     @Override
@@ -121,6 +123,7 @@ public class AddClothesFragment extends Fragment {
             tagView.setPadding(16, 8, 16, 8);
             tagView.setBackgroundResource(R.drawable.tag_background);
             tagView.setTextSize(14);
+
             tagView.setGravity(android.view.Gravity.CENTER);
 
             // Set layout params for Flexbox
@@ -261,10 +264,14 @@ public class AddClothesFragment extends Fragment {
             currentTags.clear(); // Clear previously added tags
             addedTagsContainer.removeAllViews(); // Remove all tag views
             addedTagsContainer.setVisibility(View.GONE); // Hide container until new tags are added
+
+            // Update suggestions with fresh data
+            updateSuggestions(null);
         } else {
             commitTransaction(); // All items processed, commit the transaction
         }
     }
+
 
 
     private void handleSaveClick() {

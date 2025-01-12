@@ -49,7 +49,7 @@ public class OutfitsFragment extends Fragment implements SelectionFragment.Selec
 
         try {
             recyclerView = view.findViewById(R.id.outfitRecyclerView);
-            recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+            recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 3));
 
             addOutfitButton = view.findViewById(R.id.addOutfitButton);
             deleteButton = view.findViewById(R.id.deleteButton);
@@ -172,8 +172,7 @@ public class OutfitsFragment extends Fragment implements SelectionFragment.Selec
                 adapter = new OutfitAdapter(
                         outfits,
                         this::handleItemClick,
-                        this::handleItemLongClick,
-                        isSelectionMode
+                        this::handleItemLongClick
                 );
                 recyclerView.setAdapter(adapter);
             } else {
@@ -185,47 +184,6 @@ public class OutfitsFragment extends Fragment implements SelectionFragment.Selec
         }
     }
 
-    private void handleItemClick(Outfit outfit) {
-        if (isSelectionMode) {
-            toggleItemSelection(outfit);
-        } else {
-            Toast.makeText(requireContext(), "Clicked on outfit: " + outfit.getName(), Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void handleItemLongClick(Outfit outfit) {
-        if (outfit == null) {
-            exitSelectionMode();
-            return;
-        }
-        if (!isSelectionMode) {
-            isSelectionMode = true;
-            updateButtonVisibility(); // Show Delete Button
-        }
-        toggleItemSelection(outfit);
-    }
-
-    private void toggleItemSelection(Outfit outfit) {
-        if (selectedItems.contains(outfit)) {
-            selectedItems.remove(outfit);
-        } else {
-            selectedItems.add(outfit);
-        }
-
-        // Exit selection mode if all items are deselected
-        if (selectedItems.isEmpty()) {
-            exitSelectionMode();
-        }
-
-        adapter.notifyDataSetChanged();
-    }
-
-    private void exitSelectionMode() {
-        isSelectionMode = false;
-        selectedItems.clear();
-        adapter.setSelectionMode(false);
-        updateButtonVisibility(); // This hides the Delete Button
-    }
 
     private void deleteSelectedOutfits() {
         try {
@@ -241,15 +199,63 @@ public class OutfitsFragment extends Fragment implements SelectionFragment.Selec
         }
     }
 
-    private void updateButtonVisibility() {
-        if (isSelectionMode) {
-            addOutfitButton.setVisibility(View.GONE); // Hide "Add Outfit" button
-            deleteButton.setVisibility(View.VISIBLE); // Show "Delete" button
+
+    private void handleItemClick(Outfit outfit) {
+        if (!selectedItems.isEmpty()) { // Selection mode is active
+            toggleItemSelection(outfit);
         } else {
-            addOutfitButton.setVisibility(View.VISIBLE); // Show "Add Outfit" button
-            deleteButton.setVisibility(View.GONE); // Hide "Delete" button
+            // Normal click action
+            Toast.makeText(requireContext(), "Clicked on outfit: " + outfit.getName(), Toast.LENGTH_SHORT).show();
         }
     }
+
+
+    private void handleItemLongClick(Outfit outfit) {
+        if (outfit == null) {
+            exitSelectionMode(); // Exit if no items are long-clicked
+            return;
+        }
+
+        toggleItemSelection(outfit); // Select the long-clicked item
+        updateButtonVisibility();   // Show Delete button
+    }
+
+    private void updateButtonVisibility() {
+        if (!selectedItems.isEmpty()) {
+            // If there are selected items, hide the Add button and show the Delete button
+            addOutfitButton.setVisibility(View.GONE);
+            deleteButton.setVisibility(View.VISIBLE);
+        } else {
+            // If no items are selected, show the Add button and hide the Delete button
+            addOutfitButton.setVisibility(View.VISIBLE);
+            deleteButton.setVisibility(View.GONE);
+        }
+    }
+
+
+    private void toggleItemSelection(Outfit outfit) {
+        if (selectedItems.contains(outfit)) {
+            selectedItems.remove(outfit); // Deselect item
+        } else {
+            selectedItems.add(outfit); // Select item
+        }
+
+        // If no items are selected, exit selection mode
+        if (selectedItems.isEmpty()) {
+            exitSelectionMode();
+        }
+
+        adapter.notifyDataSetChanged(); // Refresh the adapter
+    }
+
+
+    private void exitSelectionMode() {
+        selectedItems.clear(); // Clear all selections
+        adapter.notifyDataSetChanged(); // Refresh UI to hide checkboxes
+        updateButtonVisibility(); // Reset buttons
+    }
+
+
     public void reloadOutfits() {
         try {
             if (isAdded()) { // Ensure the fragment is attached

@@ -92,7 +92,7 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
 
             // Initialize UI elements
             recyclerView = view.findViewById(R.id.recyclerView);
-            recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 4));
+            recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 3));
 
 
             editCollectionName = view.findViewById(R.id.editCollectionName);

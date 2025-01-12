@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -197,7 +198,6 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
                     TextView tagView = new TextView(requireContext());
                     tagView.setText(tag.trim());
                     tagView.setTextSize(14);
-                    tagView.setTextColor(ResourcesCompat.getColor(getResources(), android.R.color.primary_text_dark, requireContext().getTheme()));
                     tagView.setPadding(16, 8, 16, 8);
                     tagView.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.tag_background, requireContext().getTheme()));
 
@@ -233,6 +233,9 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
                         null
                 );
                 collectionsRecyclerView.setAdapter(adapter);
+
+                //load outfits
+                loadOutfitsForClothing();
             }
         } catch (Exception e) {
             Log.e(TAG, "Error loading clothing details: " + e.getMessage(), e);
@@ -260,18 +263,25 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
             }
             cursor.close();
 
-            OutfitAdapter outfitAdapter = new OutfitAdapter(
-                    outfits,
-                    outfit -> Toast.makeText(requireContext(), "Clicked on outfit: " + outfit.getName(), Toast.LENGTH_SHORT).show(),
-                    null,
-                    false
-            );
-            outfitsRecyclerView.setAdapter(outfitAdapter);
+            // Set up the adapter and RecyclerView
+            if (!outfits.isEmpty()) {
+                OutfitAdapter outfitAdapter = new OutfitAdapter(
+                        outfits,
+                        outfit -> Toast.makeText(requireContext(), "Clicked on outfit: " + outfit.getName(), Toast.LENGTH_SHORT).show(),
+                        outfit -> Toast.makeText(requireContext(), "Long-clicked outfit: " + outfit.getName(), Toast.LENGTH_SHORT).show()
+                );
+                outfitsRecyclerView.setAdapter(outfitAdapter);
+                outfitsRecyclerView.setVisibility(View.VISIBLE); // Ensure RecyclerView is visible
+            } else {
+                outfitsRecyclerView.setVisibility(View.GONE); // Hide if no outfits are found
+                Toast.makeText(requireContext(), "No outfits found for this clothing item.", Toast.LENGTH_SHORT).show();
+            }
         } catch (Exception e) {
             Log.e(TAG, "Error loading outfits for clothing: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Failed to load outfits.", Toast.LENGTH_SHORT).show();
         }
     }
+
 
     private void showTagsEditor() {
         if (getView() == null) return;
@@ -388,6 +398,7 @@ public class ClothingDetailFragment extends Fragment implements SelectionFragmen
         tagView.setPadding(16, 8, 16, 8); // Padding inside the tag
         tagView.setBackgroundResource(R.drawable.tag_background); // Background drawable
         tagView.setTextSize(14); // Text size
+
         tagView.setGravity(android.view.Gravity.CENTER); // Center the text
 
         // Set layout params for Flexbox

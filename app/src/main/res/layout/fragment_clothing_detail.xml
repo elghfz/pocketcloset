@@ -21,15 +21,16 @@
         android:clickable="true"
         android:focusable="true" />
     <!-- Main Content -->
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="16dp" />
 
     <LinearLayout
         android:id="@+id/mainContent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="26dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -87,6 +88,7 @@
                     app:justifyContent="flex_start"
                     android:padding="8dp"
                     android:layout_marginTop="8dp"
+                    android:textColor="?attr/tag_text_color"
                     android:background="?android:attr/windowBackground" />
 
 
@@ -133,7 +135,7 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/outfitsRecyclerView"
                 android:layout_width="match_parent"
-                android:layout_height="160dp"
+                android:layout_height="180dp"
                 android:layout_marginTop="6dp"
                 android:padding="8dp"
                 android:clipToPadding="false" />

@@ -8,6 +8,7 @@
         <item name="android:textColorPrimary">#FFFFFF</item>
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
+        <item name="tag_text_color">@color/tag_text_color_dark</item>
     </style>
 
     <style name="BottomNavigationStyle" parent="Widget.Material3.BottomNavigationView">

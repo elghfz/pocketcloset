@@ -13,14 +13,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.fz.pocketcloset.R;
 import com.fz.pocketcloset.items.Outfit;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class OutfitAdapter extends RecyclerView.Adapter<OutfitAdapter.OutfitViewHolder> {
 
     private final List<Outfit> outfits;
-    private boolean isSelectionMode;
-    private final List<Outfit> selectedOutfits = new ArrayList<>();
+    private final Set<Outfit> selectedItems = new HashSet<>();
+
     private final OnItemClickListener clickListener;
     private final OnItemLongClickListener longClickListener;
 
@@ -32,11 +33,10 @@ public class OutfitAdapter extends RecyclerView.Adapter<OutfitAdapter.OutfitView
         void onItemLongClick(Outfit outfit);
     }
 
-    public OutfitAdapter(List<Outfit> outfits, OnItemClickListener clickListener, OnItemLongClickListener longClickListener, boolean isSelectionMode) {
+    public OutfitAdapter(List<Outfit> outfits, OnItemClickListener clickListener, OnItemLongClickListener longClickListener) {
         this.outfits = outfits;
         this.clickListener = clickListener;
         this.longClickListener = longClickListener;
-        this.isSelectionMode = isSelectionMode;
     }
 
     @NonNull
@@ -49,7 +49,7 @@ public class OutfitAdapter extends RecyclerView.Adapter<OutfitAdapter.OutfitView
     @Override
     public void onBindViewHolder(@NonNull OutfitViewHolder holder, int position) {
         Outfit outfit = outfits.get(position);
-        holder.bind(outfit, clickListener, longClickListener, isSelectionMode, selectedOutfits);
+        holder.bind(outfit, clickListener, longClickListener, selectedItems);
     }
 
     @Override
@@ -63,16 +63,17 @@ public class OutfitAdapter extends RecyclerView.Adapter<OutfitAdapter.OutfitView
         notifyDataSetChanged();
     }
 
-    public void setSelectionMode(boolean isSelectionMode) {
-        this.isSelectionMode = isSelectionMode;
-        if (!isSelectionMode) {
-            selectedOutfits.clear(); // Clear selections when exiting selection mode
+    public void toggleItem(Outfit outfit) {
+        if (selectedItems.contains(outfit)) {
+            selectedItems.remove(outfit);
+        } else {
+            selectedItems.add(outfit);
         }
-        notifyDataSetChanged();
+        notifyDataSetChanged(); // Refresh the UI
     }
 
-    public List<Outfit> getSelectedOutfits() {
-        return selectedOutfits;
+    public Set<Outfit> getSelectedItems() {
+        return selectedItems;
     }
 
     static class OutfitViewHolder extends RecyclerView.ViewHolder {
@@ -85,38 +86,60 @@ public class OutfitAdapter extends RecyclerView.Adapter<OutfitAdapter.OutfitView
             checkBoxOutfit = itemView.findViewById(R.id.checkboxOutfit);
         }
 
-        void bind(Outfit outfit, OnItemClickListener clickListener, OnItemLongClickListener longClickListener, boolean isSelectionMode, List<Outfit> selectedOutfits) {
-            // Load image from outfit's combinedImagePath
+        void bind(Outfit outfit, OnItemClickListener clickListener, OnItemLongClickListener longClickListener, Set<Outfit> selectedItems) {
+            // Load outfit image
             if (outfit.getCombinedImagePath() != null) {
                 outfitImage.setImageURI(Uri.parse(outfit.getCombinedImagePath()));
             } else {
-                outfitImage.setImageResource(R.drawable.placeholder_clothing_item); // Fallback image
+                outfitImage.setImageResource(R.drawable.placeholder_clothing_item);
             }
 
-            // Set checkbox visibility and state based on selection mode
-            checkBoxOutfit.setVisibility(isSelectionMode ? View.VISIBLE : View.GONE);
-            checkBoxOutfit.setChecked(selectedOutfits.contains(outfit));
+            // Update checkbox visibility and state based on selection
+            checkBoxOutfit.setVisibility(selectedItems.isEmpty() ? View.GONE : View.VISIBLE);
+            checkBoxOutfit.setChecked(selectedItems.contains(outfit));
 
-            // Handle item click and checkbox toggle
-            itemView.setOnClickListener(v -> {
-                if (isSelectionMode) {
-                    if (selectedOutfits.contains(outfit)) {
-                        selectedOutfits.remove(outfit);
-                        checkBoxOutfit.setChecked(false);
-                    } else {
-                        selectedOutfits.add(outfit);
-                        checkBoxOutfit.setChecked(true);
-                    }
+            // Handle checkbox changes
+            checkBoxOutfit.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    selectedItems.add(outfit); // Add the item to selected items
                 } else {
-                    clickListener.onItemClick(outfit);
+                    selectedItems.remove(outfit); // Remove the item from selected items
+
+                    // Notify fragment to exit selection mode if no items are selected
+                    if (selectedItems.isEmpty()) {
+                        longClickListener.onItemLongClick(null); // Exit selection mode
+                    }
                 }
             });
 
-            // Handle long-click to enable selection mode
+            // Handle item click
+            itemView.setOnClickListener(v -> {
+                if (selectedItems.isEmpty()) {
+                    clickListener.onItemClick(outfit); // Normal click behavior
+                } else {
+                    if (selectedItems.contains(outfit)) {
+                        selectedItems.remove(outfit);
+                        checkBoxOutfit.setChecked(false);
+                    } else {
+                        selectedItems.add(outfit);
+                        checkBoxOutfit.setChecked(true);
+                    }
+
+                    // Exit selection mode if no items are selected
+                    if (selectedItems.isEmpty()) {
+                        longClickListener.onItemLongClick(null);
+                    }
+                }
+            });
+
+            // Handle long click
             itemView.setOnLongClickListener(v -> {
-                longClickListener.onItemLongClick(outfit);
+                selectedItems.add(outfit); // Add the long-clicked item
+                checkBoxOutfit.setChecked(true); // Check the checkbox
+                longClickListener.onItemLongClick(outfit); // Notify fragment
                 return true;
             });
         }
+
     }
 }
