@@ -4,7 +4,7 @@
 ## 🎯 Overview
 The Digital Closet App is designed to help you manage your wardrobe effortlessly. With features like adding clothes with images and tags, organizing them into collections, and creating outfits using a drag-and-drop interface, this app makes wardrobe management a breeze.
 
-## 🚀 Features
+## 💡 Features
 - **Add Clothes**: Easily add clothes with images and tags for better organization.
 - **Organize Collections**: Group your clothes into collections for easy access.
 - **Create Outfits**: Use the drag-and-drop interface to create and save outfits.
@@ -45,9 +45,13 @@ The Digital Closet App is designed to help you manage your wardrobe effortlessly
 
 <img src="./demo/collectioneditingdemo.gif" alt="Collection editing demo" width="400" />
 
-## 💡 Roadmap
-- **Integrated Background Remover**: Automatically remove backgrounds from clothing images.
-- **Settings Panel**: Customize your app experience with a new settings panel.
+## 🚀 Roadmap
+- **Integrated Background Remover**: Automatically remove backgrounds from clothing images
+- **Settings Panel**: Centralized panel for handling different settings (and features as they get added)
+- **Custom Themes**: Different color accents, banners for collections, etc...
+- **Backup and restore**: Back up your Pocket Closet to a local file for safekeeping
+- **Cloud Sync** : support for automatic syncing via your preferred cloud provider
+- **Web app** : Access your Pocket Closet through a web interface that syncs to your phone app 
 
 ## 🛠️ Installation
 1. Clone the repository.
