@@ -23,6 +23,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -82,6 +83,21 @@ public class OutfitCreationFragment extends Fragment {
         buttonSave.setOnClickListener(v -> saveOutfit());
 
         return view;
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        // Create and register callback for back press
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(),
+                new OnBackPressedCallback(true) {
+                    @Override
+                    public void handleOnBackPressed() {
+                        Toast.makeText(requireContext(), "Outfit creation canceled.", Toast.LENGTH_SHORT).show();
+                        showRegularFragment();
+                    }
+                });
     }
 
     private void renderSelectedClothes() {
@@ -233,21 +249,17 @@ public class OutfitCreationFragment extends Fragment {
 
 
     private void showRegularFragment() {
-        getParentFragmentManager().popBackStack(); // Go back to the previous fragment
+        getParentFragmentManager().popBackStack();
         if (getActivity() != null) {
             View container = getActivity().findViewById(R.id.dynamic_fragment_container);
             if (container != null) {
-                container.setVisibility(View.GONE); // Hide dynamic container
+                container.setVisibility(View.GONE);
             }
         }
-
-        // Ensure the OutfitsFragment is refreshed
         if (getActivity() instanceof MainActivity) {
             ((MainActivity) getActivity()).refreshOutfitsFragment();
         }
     }
-
-
 
 
 }

@@ -17,7 +17,7 @@ import android.widget.ImageView;
 
 import android.widget.TextView;
 import android.widget.Toast;
-
+import androidx.activity.OnBackPressedCallback;
 import com.google.android.flexbox.FlexboxLayout;
 
 
@@ -52,6 +52,8 @@ public class AddClothesFragment extends Fragment {
  //   private TagSuggestionsAdapter tagSuggestionsAdapter; // Adapter for the RecyclerView
     private FlexboxLayout addedTagsContainer; // For displaying added tags
     private FlexboxLayout tagSuggestionsContainer;
+
+
 
     public static AddClothesFragment newInstance(List<Uri> imageUris) {
         AddClothesFragment fragment = new AddClothesFragment();
@@ -112,6 +114,19 @@ public class AddClothesFragment extends Fragment {
     }
 
 
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        // Create and register callback for back press
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(),
+                new OnBackPressedCallback(true) {
+                    @Override
+                    public void handleOnBackPressed() {
+                        cancelProcess();
+                    }
+                });
+    }
 
     private void addTagToContainer(String tag) {
         if (!tag.isEmpty() && !currentTags.contains(tag)) {

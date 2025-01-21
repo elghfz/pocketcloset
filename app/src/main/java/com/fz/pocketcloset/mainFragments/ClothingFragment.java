@@ -18,6 +18,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -171,6 +172,26 @@ public class ClothingFragment extends Fragment implements SelectionFragment.Sele
 
             // Update button visibility based on the current state
             updateButtonVisibility();
+
+            requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(),
+                    new OnBackPressedCallback(true) {
+                        @Override
+                        public void handleOnBackPressed() {
+                            // Check if filter dialog is showing
+                            FrameLayout filterOverlayContainer = requireView().findViewById(R.id.filterOverlayContainer);
+                            if (filterOverlayContainer != null && filterOverlayContainer.getVisibility() == View.VISIBLE) {
+                                closeFilterDialog();
+                            } else if (isSelectionMode) {
+                                exitSelectionMode();
+                            } else {
+                                // If neither filter dialog is showing nor in selection mode,
+                                // disable this callback and allow normal back navigation
+                                setEnabled(false);
+                                requireActivity().getOnBackPressedDispatcher().onBackPressed();
+                                setEnabled(true);
+                            }
+                        }
+                    });
 
         } catch (Exception e) {
             Log.e(TAG, "Error in onViewCreated: " + e.getMessage(), e);
@@ -514,7 +535,7 @@ public class ClothingFragment extends Fragment implements SelectionFragment.Sele
 
             boolean[] selectedTags = new boolean[selectableTags.size()];
 
-            // Set up the filter overlay to show the tags
+            // Get and show the filter overlay
             FrameLayout filterOverlayContainer = requireView().findViewById(R.id.filterOverlayContainer);
             filterOverlayContainer.setVisibility(View.VISIBLE);
 
@@ -522,7 +543,6 @@ public class ClothingFragment extends Fragment implements SelectionFragment.Sele
             RecyclerView tagsRecyclerView = requireView().findViewById(R.id.tagsRecyclerView);
             FlexboxLayoutManager flexboxLayoutManager = new FlexboxLayoutManager(requireContext());
             tagsRecyclerView.setLayoutManager(flexboxLayoutManager);
-
 
             // Set adapter
             SelectionAdapter tagAdapter = new SelectionAdapter(selectableTags, selectedTags);
@@ -538,12 +558,12 @@ public class ClothingFragment extends Fragment implements SelectionFragment.Sele
                     }
                 }
                 applyFilter(selectedTagSet);
-                filterOverlayContainer.setVisibility(View.GONE);
+                closeFilterDialog();
             });
 
             // Handle Cancel button click
             ImageButton cancelFilterButton = requireView().findViewById(R.id.cancelFilterButton);
-            cancelFilterButton.setOnClickListener(v -> filterOverlayContainer.setVisibility(View.GONE));
+            cancelFilterButton.setOnClickListener(v -> closeFilterDialog());
 
         } catch (Exception e) {
             Log.e(TAG, "Error showing filter dialog: " + e.getMessage(), e);
@@ -551,6 +571,12 @@ public class ClothingFragment extends Fragment implements SelectionFragment.Sele
     }
 
 
+    private void closeFilterDialog() {
+        FrameLayout filterOverlayContainer = requireView().findViewById(R.id.filterOverlayContainer);
+        if (filterOverlayContainer != null && filterOverlayContainer.getVisibility() == View.VISIBLE) {
+            filterOverlayContainer.setVisibility(View.GONE);
+        }
+    }
 
     private void applyFilter(Set<String> selectedTags) {
         try {

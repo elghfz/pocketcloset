@@ -16,6 +16,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.activity.OnBackPressedCallback;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -172,6 +173,23 @@ public class CollectionDetailFragment extends Fragment implements SelectionFragm
     }
 
 
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        // Create and register callback for back press
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(),
+                new OnBackPressedCallback(true) {
+                    @Override
+                    public void handleOnBackPressed() {
+                        if (isSelectionMode) {
+                            exitSelectionMode();
+                        } else {
+                        navigateBack();
+                        }
+                    }
+                });
+    }
 
     public void reloadData() {
         Log.d(TAG, "reloadData: Reloading collection details...");
