@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -24,6 +25,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.fz.pocketcloset.items.ClothingItem;
@@ -33,8 +35,10 @@ import com.fz.pocketcloset.helpers.ImagePickerHelper;
 import com.fz.pocketcloset.MainActivity;
 import com.fz.pocketcloset.R;
 import com.fz.pocketcloset.items.SelectableItem;
+import com.fz.pocketcloset.items.SelectableTag;
 import com.fz.pocketcloset.temporaryFragments.SelectionAdapter;
 import com.fz.pocketcloset.temporaryFragments.SelectionFragment;
+import com.google.android.flexbox.FlexboxLayoutManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,6 +63,7 @@ public class ClothingFragment extends Fragment implements SelectionFragment.Sele
     private ImageButton filterButton, clearFilterButton;
     private List<ClothingItem> clothingList; // Original, unfiltered list
     private List<ClothingItem> filteredClothingList; // Filtered list
+
 
     @Override
     public void onPause() {
@@ -501,65 +506,104 @@ public class ClothingFragment extends Fragment implements SelectionFragment.Sele
                 return;
             }
 
-            String[] tagArray = tags.toArray(new String[0]);
-            boolean[] selectedTags = new boolean[tagArray.length];
+            // Convert tags into SelectableTag objects
+            List<SelectableItem> selectableTags = new ArrayList<>();
+            for (String tag : tags) {
+                selectableTags.add(new SelectableTag(tag));
+            }
 
-            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-            builder.setTitle("Filter by Tags")
-                    .setMultiChoiceItems(tagArray, selectedTags, (dialog, which, isChecked) -> selectedTags[which] = isChecked)
-                    .setPositiveButton("Apply", (dialog, which) -> applyFilter(tagArray, selectedTags))
-                    .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
-                    .show();
+            boolean[] selectedTags = new boolean[selectableTags.size()];
+
+            // Set up the filter overlay to show the tags
+            FrameLayout filterOverlayContainer = requireView().findViewById(R.id.filterOverlayContainer);
+            filterOverlayContainer.setVisibility(View.VISIBLE);
+
+            // RecyclerView for displaying tags
+            RecyclerView tagsRecyclerView = requireView().findViewById(R.id.tagsRecyclerView);
+            FlexboxLayoutManager flexboxLayoutManager = new FlexboxLayoutManager(requireContext());
+            tagsRecyclerView.setLayoutManager(flexboxLayoutManager);
+
+
+            // Set adapter
+            SelectionAdapter tagAdapter = new SelectionAdapter(selectableTags, selectedTags);
+            tagsRecyclerView.setAdapter(tagAdapter);
+
+            // Handle Save button click
+            ImageButton saveFilterButton = requireView().findViewById(R.id.saveFilterButton);
+            saveFilterButton.setOnClickListener(v -> {
+                Set<String> selectedTagSet = new HashSet<>();
+                for (int i = 0; i < selectableTags.size(); i++) {
+                    if (selectedTags[i]) {
+                        selectedTagSet.add(selectableTags.get(i).getDisplayName().toLowerCase().trim());
+                    }
+                }
+                applyFilter(selectedTagSet);
+                filterOverlayContainer.setVisibility(View.GONE);
+            });
+
+            // Handle Cancel button click
+            ImageButton cancelFilterButton = requireView().findViewById(R.id.cancelFilterButton);
+            cancelFilterButton.setOnClickListener(v -> filterOverlayContainer.setVisibility(View.GONE));
 
         } catch (Exception e) {
             Log.e(TAG, "Error showing filter dialog: " + e.getMessage(), e);
         }
     }
 
-    private void applyFilter(String[] tags, boolean[] selectedTags) {
+
+
+    private void applyFilter(Set<String> selectedTags) {
         try {
-            Set<String> selectedTagSet = new HashSet<>();
-            for (int i = 0; i < tags.length; i++) {
-                if (selectedTags[i]) {
-                    selectedTagSet.add(tags[i].trim().toLowerCase());
-                }
-            }
+            // Normalize the selected tags
+            Set<String> normalizedSelectedTags = normalizeTags(selectedTags);
 
-            // Update selected tags display
-            updateSelectedTagsDisplay(selectedTagSet);
+            // Reset the filtered list
+            filteredClothingList.clear();
 
-            if (selectedTagSet.isEmpty()) {
-                // Reset to show all items
-                filteredClothingList = new ArrayList<>(clothingList);
-            } else {
-                filteredClothingList.clear();
-                for (ClothingItem item : clothingList) {
-                    if (item.getTags() != null) {
-                        Set<String> itemTags = new HashSet<>(Arrays.asList(item.getTags().split(",")));
-                        itemTags = normalizeTags(itemTags);
+            // Apply filter logic to each clothing item
+            for (ClothingItem item : clothingList) {
+                if (item.getTags() != null) {
+                    Set<String> itemTags = new HashSet<>(Arrays.asList(item.getTags().split(",")));
+                    itemTags = normalizeTags(itemTags);  // Normalize item tags
 
-                        // Check if there is any overlap with the selected tags
-                        if (!Collections.disjoint(itemTags, selectedTagSet)) {
-                            filteredClothingList.add(item);
-                        }
+                    // If there is any overlap between the item's tags and selected tags, add it to the filtered list
+                    if (!Collections.disjoint(itemTags, normalizedSelectedTags)) {
+                        filteredClothingList.add(item);
                     }
                 }
             }
 
-            // Update the adapter with filtered data
+            // Update RecyclerView with the filtered data
             adapter.updateData(filteredClothingList);
             adapter.notifyDataSetChanged();
 
-            // Update UI based on filter state
-            updateAddClothesButtonVisibility(false);
-            updateClearFilterButtonVisibility(selectedTagSet);
+            // Update the UI based on the filter state (show/hide clear filter button)
+            updateClearFilterButtonVisibility(normalizedSelectedTags);
+
+            // Update the selected tags container
+            updateSelectedTagsDisplay(normalizedSelectedTags);  // This will rebuild the selected tags container with the selected tags
 
         } catch (Exception e) {
             Log.e(TAG, "Error applying filter: " + e.getMessage(), e);
         }
     }
 
+    private Set<String> normalizeTags(Set<String> tags) {
+        Set<String> normalizedTags = new HashSet<>();
+        for (String tag : tags) {
+            normalizedTags.add(tag.trim().toLowerCase()); // Trim and normalize each tag
+        }
+        return normalizedTags;
+    }
 
+    private void updateClearFilterButtonVisibility(Set<String> selectedTagSet) {
+        // Show or hide the clear filter button based on the filter state
+        if (selectedTagSet != null && !selectedTagSet.isEmpty()) {
+            clearFilterButton.setVisibility(View.VISIBLE); // Show button if filtering is applied
+        } else {
+            clearFilterButton.setVisibility(View.GONE); // Hide button otherwise
+        }
+    }
 
 
     private void updateSelectedTagsDisplay(Set<String> selectedTags) {
@@ -590,14 +634,6 @@ public class ClothingFragment extends Fragment implements SelectionFragment.Sele
     }
 
 
-    private Set<String> normalizeTags(Set<String> tags) {
-        Set<String> normalizedTags = new HashSet<>();
-        for (String tag : tags) {
-            normalizedTags.add(tag.trim().toLowerCase()); // Trim and normalize
-        }
-        return normalizedTags;
-    }
-
     private void clearFilter() {
         try {
             filteredClothingList = new ArrayList<>(clothingList); // Reset to all items
@@ -626,14 +662,6 @@ public class ClothingFragment extends Fragment implements SelectionFragment.Sele
             adapter.updateData(filteredClothingList); // Update adapter with new data
             adapter.notifyDataSetChanged(); // Notify adapter to refresh views
         });
-    }
-
-    private void updateClearFilterButtonVisibility(Set<String> selectedTagSet) {
-        if (selectedTagSet != null && !selectedTagSet.isEmpty()) {
-            clearFilterButton.setVisibility(View.VISIBLE); // Show button if filtering is applied
-        } else {
-            clearFilterButton.setVisibility(View.GONE); // Hide button otherwise
-        }
     }
 
 

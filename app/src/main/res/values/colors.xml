@@ -5,5 +5,15 @@
     <color name="tag_text_color_light">#433c3c</color>
     <color name="tag_text_color_dark">#FFFFFF</color>
 
+    <!-- Default Tag Background (using primary color) -->
+    <color name="tag_default_background">#ce3131</color> <!-- Primary color as default tag background -->
+
+    <!-- Selected Tag Background (darker shade of primary color) -->
+    <color name="tag_selected_background">#9b2424</color> <!-- Darker shade of the primary color for selected tags -->
+
+    <!-- Tag Text Colors -->
+    <color name="tag_default_text">#FFFFFF</color> <!-- White text for unselected tags -->
+    <color name="tag_selected_text">#FFFFFF</color> <!-- White text for selected tags -->
+
 
 </resources>

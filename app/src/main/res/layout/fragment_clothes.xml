@@ -1,7 +1,7 @@
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:padding="10dp"
     android:animateLayoutChanges="true">
@@ -94,6 +94,7 @@
         android:gravity="start"
         android:background="?android:attr/windowBackground">
     </LinearLayout>
+
     <!-- Grid view for clothing items -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
@@ -103,6 +104,67 @@
         android:padding="8dp"
         android:clipToPadding="false"
         android:scrollbars="vertical" />
+
+    <!-- Filter Overlay Container -->
+    <FrameLayout
+        android:id="@+id/filterOverlayContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:background="?android:attr/windowBackground"
+        android:elevation="4dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Select Tags"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="16dp"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/tagsRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:layout_marginTop="16dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="end"
+                android:layout_marginTop="16dp">
+
+                <!-- Cancel Filter Button -->
+                <ImageButton
+                    android:id="@+id/cancelFilterButton"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/circular_button"
+                    android:src="@drawable/cancel_icon"
+                    android:scaleType="centerInside"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="Cancel" />
+
+                <!-- Save Filter Button -->
+                <ImageButton
+                    android:id="@+id/saveFilterButton"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/circular_button"
+                    android:src="@drawable/save_icon"
+                    android:scaleType="centerInside"
+                    android:contentDescription="Save" />
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
 
     <!-- Space between the buttons and grid view -->
     <Space
