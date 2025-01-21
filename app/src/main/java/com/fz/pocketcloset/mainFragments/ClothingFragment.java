@@ -636,7 +636,8 @@ public class ClothingFragment extends Fragment implements SelectionFragment.Sele
 
     private void clearFilter() {
         try {
-            filteredClothingList = new ArrayList<>(clothingList); // Reset to all items
+            // Reset the filtered list to show all items
+            filteredClothingList = new ArrayList<>(clothingList);
             adapter.updateData(filteredClothingList);
             adapter.notifyDataSetChanged();
 
@@ -644,13 +645,35 @@ public class ClothingFragment extends Fragment implements SelectionFragment.Sele
             updateAddClothesButtonVisibility(true);
             updateClearFilterButtonVisibility(Collections.emptySet());
 
-            // Clear the tags display
+            // Clear the selected tags display
             updateSelectedTagsDisplay(Collections.emptySet());
+
+            // Explicitly remove the tint from all tags when filter is cleared
+            removeTintFromAllTags();
+
         } catch (Exception e) {
             Log.e(TAG, "Error clearing filter: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Failed to clear filter.", Toast.LENGTH_SHORT).show();
         }
     }
+
+    private void removeTintFromAllTags() {
+        // Get the FlexboxLayout or RecyclerView for the tags
+        RecyclerView tagsRecyclerView = requireView().findViewById(R.id.tagsRecyclerView);
+        if (tagsRecyclerView != null) {
+            // Loop through all the tag items and remove the tint
+            for (int i = 0; i < tagsRecyclerView.getChildCount(); i++) {
+                View tagView = tagsRecyclerView.getChildAt(i);
+                if (tagView instanceof TextView) {
+                    // Remove background tint if it exists
+                    tagView.getBackground().setTintList(null);  // Remove the tint
+                    // Optionally reset the background color (if needed)
+                    tagView.setBackgroundResource(R.drawable.tag_background); // Ensure the background stays consistent
+                }
+            }
+        }
+    }
+
 
     private void updateAddClothesButtonVisibility(boolean isVisible) {
         addClothesButton.setVisibility(isVisible ? View.VISIBLE : View.GONE);
