@@ -78,6 +78,7 @@ public class ClothingFragment extends Fragment implements SelectionFragment.Sele
     @Override
     public void onResume() {
         super.onResume();
+        Log.d("ClothingFragment", "onResume: ClothingFragment resumed");
 
         // Always reload data when the fragment is resumed
         reloadData();

@@ -18,6 +18,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
+
+import com.fz.pocketcloset.helpers.BackgroundRemover;
 import com.google.android.flexbox.FlexboxLayout;
 
 
@@ -32,11 +34,16 @@ import com.fz.pocketcloset.helpers.ImagePickerHelper;
 import com.fz.pocketcloset.MainActivity;
 import com.fz.pocketcloset.R;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class AddClothesFragment extends Fragment {
     private ImageView imageView;
@@ -68,6 +75,10 @@ public class AddClothesFragment extends Fragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             imageUris = getArguments().getParcelableArrayList("imageUris");
+            if (imageUris == null || imageUris.isEmpty()) {
+                Log.e("AddClothesFragment", "No image URIs found in arguments.");
+                cancelProcess();
+            }
         }
         dbHelper = new DatabaseHelper(requireContext());
         pendingItems = new ArrayList<>();
@@ -107,9 +118,6 @@ public class AddClothesFragment extends Fragment {
         saveButton.setOnClickListener(v -> handleSaveClick());
         cancelButton.setOnClickListener(v -> cancelProcess());
 
-        // Display the first image
-        displayCurrentImage();
-
         return view;
     }
 
@@ -117,6 +125,14 @@ public class AddClothesFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        if (imageUris != null && !imageUris.isEmpty()) {
+            displayCurrentImage();
+        } else {
+            Log.e("AddClothesFragment", "No images found to display.");
+            Toast.makeText(requireContext(), "No images available.", Toast.LENGTH_SHORT).show();
+            cancelProcess();
+        }
 
         // Create and register callback for back press
         requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(),
@@ -127,6 +143,7 @@ public class AddClothesFragment extends Fragment {
                     }
                 });
     }
+
 
     private void addTagToContainer(String tag) {
         if (!tag.isEmpty() && !currentTags.contains(tag)) {
@@ -263,28 +280,53 @@ public class AddClothesFragment extends Fragment {
             Uri currentUri = imageUris.get(currentIndex);
 
             try {
-                // Load the image as a Bitmap
-                Bitmap sourceBitmap = BitmapFactory.decodeStream(requireContext().getContentResolver().openInputStream(currentUri));
+                Bitmap sourceBitmap = BitmapFactory.decodeStream(
+                        requireContext().getContentResolver().openInputStream(currentUri)
+                );
 
-                // Process the Bitmap using addImageOnTransparentSquare
-                Bitmap processedBitmap = ImagePickerHelper.addImageOnTransparentSquare(sourceBitmap);
-
-                // Display the processed Bitmap
-                imageView.setImageBitmap(processedBitmap);
+                if (sourceBitmap != null) {
+                    imageView.setImageBitmap(sourceBitmap);
+                } else {
+                    Toast.makeText(requireContext(), "Failed to load image.", Toast.LENGTH_SHORT).show();
+                }
             } catch (Exception e) {
                 Toast.makeText(requireContext(), "Failed to load image.", Toast.LENGTH_SHORT).show();
+                Log.e("AddClothesFragment", "Error loading image: " + e.getMessage(), e);
             }
 
-            // Reset tags for the new item
-            currentTags.clear(); // Clear previously added tags
-            addedTagsContainer.removeAllViews(); // Remove all tag views
-            addedTagsContainer.setVisibility(View.GONE); // Hide container until new tags are added
+            currentTags.clear();
+            addedTagsContainer.removeAllViews();
+            addedTagsContainer.setVisibility(View.GONE);
 
-            // Update suggestions with fresh data
+            // Refresh suggested tags
+            suggestedTags = fetchSuggestedTags();
             updateSuggestions(null);
         } else {
-            commitTransaction(); // All items processed, commit the transaction
+            commitTransaction();
         }
+    }
+
+    private String saveUriToFile(Uri uri) {
+        try {
+            File outputDir = new File(requireContext().getFilesDir(), "processed_images");
+            if (!outputDir.exists() && !outputDir.mkdirs()) {
+                Log.e("AddClothesFragment", "Failed to create directory: " + outputDir.getAbsolutePath());
+                return null;
+            }
+
+            File outputFile = new File(outputDir, "processed_" + System.currentTimeMillis() + ".png");
+            Bitmap bitmap = BitmapFactory.decodeStream(requireContext().getContentResolver().openInputStream(uri));
+
+            if (bitmap != null) {
+                try (FileOutputStream out = new FileOutputStream(outputFile)) {
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+                    return outputFile.getAbsolutePath();
+                }
+            }
+        } catch (Exception e) {
+            Log.e("AddClothesFragment", "Error saving Uri to file: " + e.getMessage(), e);
+        }
+        return null;
     }
 
 
@@ -296,12 +338,14 @@ public class AddClothesFragment extends Fragment {
         }
 
         Uri currentUri = imageUris.get(currentIndex);
-        String imagePath = ImagePickerHelper.copyImageToPrivateStorage(requireContext(), currentUri);
 
-        if (imagePath != null) {
+        // Save the image to a permanent directory
+        String permanentPath = saveUriToFile(currentUri);
+
+        if (permanentPath != null) {
             ContentValues values = new ContentValues();
             values.put("tags", String.join(",", currentTags)); // Save tags as a comma-separated string
-            values.put("imagePath", imagePath);
+            values.put("imagePath", permanentPath); // Save permanent file path
 
             // Add to pending items
             pendingItems.add(values);

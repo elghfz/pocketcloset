@@ -20,4 +20,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Pocket Closet"
-include(":app")
+include(":app", ":sdk")
