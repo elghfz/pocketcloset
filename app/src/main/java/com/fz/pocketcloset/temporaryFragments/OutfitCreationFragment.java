@@ -226,6 +226,10 @@ public class OutfitCreationFragment extends Fragment {
 
                                 Toast.makeText(requireContext(), "Outfit saved!", Toast.LENGTH_SHORT).show();
                                 showRegularFragment();
+                                if (getActivity() instanceof MainActivity) {
+                                    MainActivity mainActivity = (MainActivity) getActivity();
+                                    mainActivity.refreshOutfitsFragment();
+                                }
                             } catch (Exception e) {
                                 Log.e(TAG, "Error saving file with Glide: " + e.getMessage(), e);
                                 Toast.makeText(requireContext(), "Failed to save outfit.", Toast.LENGTH_SHORT).show();
