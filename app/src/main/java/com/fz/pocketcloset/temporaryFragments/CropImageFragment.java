@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -35,9 +36,7 @@ public class CropImageFragment extends Fragment {
 
     private CropImageView cropImageView;
     private View processingOverlay;
-    Button cropButton;
-    Button cancelButton;
-    Button rotateButton;
+    ImageButton cropButton, cancelButton, rotateButton;
 
     private Queue<Uri> imageQueue = new LinkedList<>();
     private List<Uri> croppedImageUris = new ArrayList<>();
