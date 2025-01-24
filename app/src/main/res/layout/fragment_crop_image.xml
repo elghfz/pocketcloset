@@ -72,7 +72,6 @@
             android:layout_gravity="center_horizontal|center_vertical"
             android:layout_marginTop="120dp"
             android:text="Processing images..."
-            android:textColor="@android:color/white"
             android:textSize="18sp"
             android:visibility="visible" />
     </FrameLayout>

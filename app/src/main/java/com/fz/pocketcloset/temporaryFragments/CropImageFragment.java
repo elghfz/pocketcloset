@@ -50,8 +50,15 @@ public class CropImageFragment extends Fragment {
     }
 
     static {
-        System.loadLibrary("opencv_java4");
+        try {
+            Log.d("NativeLibTest", "Attempting to load opencv_java4 library");
+            System.loadLibrary("opencv_java4");
+            Log.d("NativeLibTest", "Library loaded successfully");
+        } catch (UnsatisfiedLinkError e) {
+            Log.e("NativeLibTest", "Failed to load opencv_java4 library: " + e.getMessage());
+        }
     }
+
 
     @Nullable
     @Override
