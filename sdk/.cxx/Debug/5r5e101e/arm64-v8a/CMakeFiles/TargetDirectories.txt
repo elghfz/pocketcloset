@@ -1,0 +1,3 @@
+C:/Users/f.zohra/AndroidStudioProjects/PocketCloset/sdk/.cxx/Debug/5r5e101e/arm64-v8a/CMakeFiles/opencv_jni_shared.dir
+C:/Users/f.zohra/AndroidStudioProjects/PocketCloset/sdk/.cxx/Debug/5r5e101e/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/f.zohra/AndroidStudioProjects/PocketCloset/sdk/.cxx/Debug/5r5e101e/arm64-v8a/CMakeFiles/rebuild_cache.dir
