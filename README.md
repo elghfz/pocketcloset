@@ -47,7 +47,7 @@ The Digital Closet App is designed to help you manage your wardrobe effortlessly
 <img src="./demo/collectioneditingdemo.gif" alt="Collection editing demo" width="400" />
 
 ## 🚀 Roadmap
-- [x] **Integrated Background Remover**: Automatically remove backgrounds from clothing images
+- [x] ~~**Integrated Background Remover**: Automatically remove backgrounds from clothing images~~
 - [ ] **Settings Panel**: Centralized panel for handling different settings (and features as they get added)
 - [ ] **Custom Themes**: Different color accents, banners for collections, etc...
 - [ ] **Backup and restore**: Back up your Pocket Closet to a local file for safekeeping
